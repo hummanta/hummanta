@@ -12,26 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod cmd;
-mod context;
-mod errors;
-
 use std::sync::Arc;
 
 use clap::Parser;
-use cmd::Cli;
-use context::Context;
-use errors::Result;
-use tracing::error;
 
-fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
+use crate::context::Context;
+use crate::errors::Result;
 
-    let ctx = Arc::new(Context::default());
-    if let Err(err) = Cli::parse().exec(ctx) {
-        error!("{}", err);
-        std::process::exit(1);
+#[derive(Parser)]
+#[command(arg_required_else_help = true, disable_help_subcommand = false)]
+pub struct Cli {}
+
+impl Cli {
+    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
+        println!("Hello, world!");
+
+        Ok(())
     }
-
-    Ok(())
 }

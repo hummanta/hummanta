@@ -12,26 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod cmd;
-mod context;
-mod errors;
-
-use std::sync::Arc;
-
-use clap::Parser;
-use cmd::Cli;
-use context::Context;
-use errors::Result;
-use tracing::error;
-
-fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
-
-    let ctx = Arc::new(Context::default());
-    if let Err(err) = Cli::parse().exec(ctx) {
-        error!("{}", err);
-        std::process::exit(1);
-    }
-
-    Ok(())
-}
+/// Holds the state of the application.
+#[derive(Default)]
+pub struct Context {}
