@@ -12,50 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod build;
-mod compile;
-mod init;
-mod target;
+mod add;
+mod list;
+mod remove;
+mod show;
 
 use std::sync::Arc;
 
-use clap::{Parser, Subcommand};
+use crate::{context::Context, errors::Result};
+use clap::{Args, Subcommand};
 
-use crate::context::Context;
-use crate::errors::Result;
-
-#[derive(Parser)]
-#[command(arg_required_else_help = true, disable_help_subcommand = false)]
+/// View and manage supported targets for the toolchain
+#[derive(Args, Debug)]
 pub struct Command {
     #[command(subcommand)]
     command: Commands,
 }
 
-#[derive(Subcommand)]
-pub enum Commands {
-    Build(build::Command),
-    Compile(compile::Command),
-    Init(init::Command),
-    Target(target::Command),
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Add(add::Command),
+    Remove(remove::Command),
+    Show(show::Command),
+    List(list::Command),
 }
 
 impl Command {
     pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
-            Commands::Build(cmd) => cmd.exec(ctx),
-            Commands::Compile(cmd) => cmd.exec(ctx),
-            Commands::Init(cmd) => cmd.exec(ctx),
-            Commands::Target(cmd) => cmd.exec(ctx),
+            Commands::Add(cmd) => cmd.exec(ctx),
+            Commands::Remove(cmd) => cmd.exec(ctx),
+            Commands::Show(cmd) => cmd.exec(ctx),
+            Commands::List(cmd) => cmd.exec(ctx),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use clap::CommandFactory;
-
-    #[test]
-    fn verify_command() {
-        super::Command::command().debug_assert();
     }
 }

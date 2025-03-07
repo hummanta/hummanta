@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod cmd;
-mod context;
-mod errors;
-
 use std::sync::Arc;
 
-use clap::Parser;
-use cmd::Command;
-use context::Context;
-use errors::Result;
-use tracing::error;
+use crate::{context::Context, errors::Result};
+use clap::Args;
 
-fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
+/// Removes the specified target configuration
+#[derive(Args, Debug)]
+pub struct Command {
+    /// The name of the target
+    target: String,
+}
 
-    let ctx = Arc::new(Context::default());
-    if let Err(err) = Command::parse().exec(ctx) {
-        error!("{}", err);
-        std::process::exit(1);
+impl Command {
+    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
+        unimplemented!();
     }
-
-    Ok(())
 }
