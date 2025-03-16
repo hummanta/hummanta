@@ -1,0 +1,9 @@
+{
+  "name": "hardhat-project",
+  "scripts": {
+    "start": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0"
+  }
+}
