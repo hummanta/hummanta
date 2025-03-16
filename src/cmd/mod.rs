@@ -21,8 +21,7 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 
-use crate::context::Context;
-use crate::errors::Result;
+use crate::{context::Context, errors::Result};
 
 #[derive(Parser)]
 #[command(arg_required_else_help = true, disable_help_subcommand = false)]

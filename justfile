@@ -16,7 +16,7 @@ clippy:
 
 # Check formatting
 fmt:
-    cargo fmt --all -- --check
+    cargo +nightly fmt --all -- --check
 
 # Test the project
 test:
