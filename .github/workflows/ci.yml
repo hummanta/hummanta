@@ -19,6 +19,8 @@ jobs:
       with:
         fetch-depth: 0
     - uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rustfmt
     - uses: taiki-e/install-action@just
     - uses: Swatinem/rust-cache@v2
     - name: Check formatting
