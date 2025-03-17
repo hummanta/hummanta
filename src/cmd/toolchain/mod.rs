@@ -12,17 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod add;
+mod list;
+mod remove;
+
 use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
-use clap::Args;
+use clap::{Args, Subcommand};
 
-/// Lists all targets
+/// Manage different toolchains used for the compilation process
 #[derive(Args, Debug)]
-pub struct Command {}
+pub struct Command {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Add(add::Command),
+    Remove(remove::Command),
+    List(list::Command),
+}
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        match &self.command {
+            Commands::Add(cmd) => cmd.exec(ctx),
+            Commands::Remove(cmd) => cmd.exec(ctx),
+            Commands::List(cmd) => cmd.exec(ctx),
+        }
     }
 }

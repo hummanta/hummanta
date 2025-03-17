@@ -16,6 +16,7 @@ mod build;
 mod compile;
 mod init;
 mod target;
+mod toolchain;
 
 use std::sync::Arc;
 
@@ -36,6 +37,7 @@ pub enum Commands {
     Compile(compile::Command),
     Init(init::Command),
     Target(target::Command),
+    Toolchain(toolchain::Command),
 }
 
 impl Command {
@@ -45,6 +47,7 @@ impl Command {
             Commands::Compile(cmd) => cmd.exec(ctx),
             Commands::Init(cmd) => cmd.exec(ctx),
             Commands::Target(cmd) => cmd.exec(ctx),
+            Commands::Toolchain(cmd) => cmd.exec(ctx),
         }
     }
 }

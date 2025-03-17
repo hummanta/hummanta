@@ -17,9 +17,12 @@ use std::sync::Arc;
 use crate::{context::Context, errors::Result};
 use clap::Args;
 
-/// Lists all targets
+/// Installs the specified language's toolchain.
 #[derive(Args, Debug)]
-pub struct Command {}
+pub struct Command {
+    /// The language to install the toolchain for.
+    language: String,
+}
 
 impl Command {
     pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {

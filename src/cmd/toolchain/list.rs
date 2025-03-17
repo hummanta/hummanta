@@ -17,7 +17,7 @@ use std::sync::Arc;
 use crate::{context::Context, errors::Result};
 use clap::Args;
 
-/// Lists all targets
+/// Lists all toolchains
 #[derive(Args, Debug)]
 pub struct Command {}
 
