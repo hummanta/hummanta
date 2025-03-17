@@ -1,13 +1,15 @@
-[package]
-name = "hummanta"
-version = "0.1.1"
+[workspace]
+resolver = "2"
+default-members = ["crates/cli"]
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.2"
 edition = "2021"
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.97"
 clap = { version = "4.5.32", features = ["derive", "env"] }
-clap-verbosity-flag = "3.0.2"
-clap_complete = "4.5.46"
 thiserror = "2.0.12"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
