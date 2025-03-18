@@ -1,13 +1,16 @@
 [workspace]
-resolver = "2"
 default-members = ["crates/cli"]
 members = ["crates/*"]
+resolver = "2"
 
 [workspace.package]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 
 [workspace.dependencies]
+# inner dependencies
+hummanta-detection = { path = "crates/detection" }
+
 anyhow = "1.0.97"
 clap = { version = "4.5.32", features = ["derive", "env"] }
 serde = { version = "1.0.219", features = ["derive"] }

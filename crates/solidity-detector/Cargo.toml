@@ -1,0 +1,7 @@
+[package]
+name = "solidity-detector"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+hummanta-detection.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "cli"
+name = "hummanta-cli"
 version.workspace = true
 edition.workspace = true
 
