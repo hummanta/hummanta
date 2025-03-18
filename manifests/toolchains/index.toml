@@ -1,0 +1,2 @@
+[toolchains]
+solidity = "solidity.toml"

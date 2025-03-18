@@ -1,0 +1,3 @@
+[solidity.solidity-detector-file]
+package = "solidity-detector"
+bin = "solidity-detector-file"
