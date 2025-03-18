@@ -4,6 +4,6 @@
     "start": "npx hardhat test"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0"
+    "@nomicfoundation/hardhat-toolbox-viem": "3.0.0"
   }
 }

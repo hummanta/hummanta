@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-
+// src: https://docs.soliditylang.org/en/latest/introduction-to-smart-contracts.html#subcurrency-example
 pragma solidity ^0.8.26;
 
 // This will only compile via IR

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-
+// src: https://docs.soliditylang.org/en/latest/solidity-by-example.html#voting
 pragma solidity >=0.7.0 <0.9.0;
 
 /// @title Voting with delegation.

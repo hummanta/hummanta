@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-
+// src: https://docs.soliditylang.org/en/latest/solidity-by-example.html#simple-open-auction
 pragma solidity ^0.8.4;
 
 contract SimpleAuction {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-
+// src: https://docs.soliditylang.org/en/latest/solidity-by-example.html#modular-contracts
 pragma solidity >=0.5.0 <0.9.0;
 
 library Balances {
