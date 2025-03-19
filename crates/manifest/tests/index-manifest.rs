@@ -14,12 +14,12 @@
 
 use hummanta_manifest::IndexManifest;
 
-const TOOLCHAINS_INDEX_TOML: &str = "[toolchains]\nsolidity = \"solidity.toml\"\n";
+const TOOLCHAINS_INDEX_TOML: &str = "solidity = \"solidity.toml\"\n";
 
 #[test]
 fn test_index_manifest_to_toml() {
     let mut manifest = IndexManifest::new();
-    manifest.insert("toolchains".to_string(), "solidity".to_string(), "solidity.toml".into());
+    manifest.insert("solidity".to_string(), "solidity.toml".into());
 
     let toml_string = toml::to_string(&manifest).expect("Failed to serialize to TOML");
 
@@ -31,5 +31,5 @@ fn test_toml_to_index_manifest() {
     let manifest: IndexManifest =
         toml::from_str(TOOLCHAINS_INDEX_TOML).expect("Failed to parse TOML");
 
-    assert_eq!(manifest.get("toolchains", "solidity"), Some(&"solidity.toml".into()));
+    assert_eq!(manifest.get("solidity"), Some(&"solidity.toml".into()));
 }
