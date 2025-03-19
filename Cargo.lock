@@ -130,7 +130,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hummanta-cli"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -141,7 +141,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-detection"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "clap",
  "serde",
@@ -150,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-manifest"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "serde",
  "toml",
@@ -306,7 +306,7 @@ checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
 
 [[package]]
 name = "solidity-detector"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "hummanta-detection",
 ]
