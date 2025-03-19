@@ -13,6 +13,8 @@
 // limitations under the License.
 
 mod index;
+mod toolchain;
 
 // Re-exports.
 pub use index::IndexManifest;
+pub use toolchain::*;
