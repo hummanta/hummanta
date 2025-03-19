@@ -17,80 +17,76 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 /// `ToolchainManifest` represents the structure of a toolchain manifest file.
+///
+/// It is structured as a nested `HashMap`, where the outer map groups toolchains by category,
+/// and the inner map associates toolchain names with their respective configurations.
+///
+/// example:
+/// ```toml
+/// [detector.detector1]
+/// package = "package1"
+/// bin = "bin1"
+///
+/// [compiler.compiler1]
+/// version = "1.0.0"
+///
+// [compiler.compiler1.target.x86_64-unknown-linux-gnu]
+/// url = "http://example.com"
+/// hash = "hash123"
+/// ```
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ToolchainManifest {
-    /// Used to specify tools for detecting specific configurations.
-    #[serde(default)]
-    pub detector: Vec<Toolchain>,
-    /// Used to specify compiler tools.
-    #[serde(default)]
-    pub compiler: Vec<Toolchain>,
-}
+pub struct ToolchainManifest(HashMap<String, HashMap<String, Toolchain>>);
 
 impl ToolchainManifest {
     /// Creates a new, empty `ToolchainManifest`.
     pub fn new() -> Self {
-        ToolchainManifest { detector: Vec::new(), compiler: Vec::new() }
+        ToolchainManifest(HashMap::new())
     }
 
-    /// Adds a toolchain to the detector list.
+    /// Inserts a new entry.
     ///
     /// # Arguments
-    /// * `toolchain` - The toolchain to add.
-    pub fn add_detector(&mut self, toolchain: Toolchain) {
-        self.detector.push(toolchain);
+    /// * `category` - The category name (e.g., "detector" or "compiler").
+    /// * `name` - The name of the toolchain.
+    /// * `toolchain` - The toolchain to insert.
+    pub fn insert(&mut self, category: String, name: String, toolchain: Toolchain) {
+        self.0.entry(category).or_default().insert(name, toolchain);
     }
 
-    /// Adds a toolchain to the compiler list.
+    /// Retrieves a toolchain for a given category and name.
     ///
     /// # Arguments
-    /// * `toolchain` - The toolchain to add.
-    pub fn add_compiler(&mut self, toolchain: Toolchain) {
-        self.compiler.push(toolchain);
-    }
-
-    /// Retrieves all detector toolchains.
+    /// * `category` - The category name.
+    /// * `name` - The name of the toolchain.
     ///
     /// # Returns
-    /// A reference to the list of detector toolchains.
-    pub fn get_detectors(&self) -> &Vec<Toolchain> {
-        &self.detector
+    /// An `Option` containing the `Toolchain` if found, or `None` otherwise.
+    pub fn get(&self, category: &str, name: &str) -> Option<&Toolchain> {
+        self.0.get(category)?.get(name)
     }
 
-    /// Retrieves all compiler toolchains.
-    ///
-    /// # Returns
-    /// A reference to the list of compiler toolchains.
-    pub fn get_compilers(&self) -> &Vec<Toolchain> {
-        &self.compiler
-    }
-
-    /// Checks if a specific toolchain exists in the detector list.
+    /// Removes a toolchain entry.
     ///
     /// # Arguments
-    /// * `name` - The name of the toolchain to check.
+    /// * `category` - The category name.
+    /// * `name` - The name of the toolchain.
     ///
     /// # Returns
-    /// `true` if the toolchain exists, `false` otherwise.
-    pub fn contains_detector(&self, name: &str) -> bool {
-        self.detector.iter().any(|t| match t {
-            Toolchain::Package(pkg) => pkg.name == name,
-            Toolchain::Release(rel) => rel.name == name,
-        })
+    /// An `Option` containing the removed `Toolchain` if it existed, or `None` otherwise.
+    pub fn remove(&mut self, category: &str, name: &str) -> Option<Toolchain> {
+        self.0.get_mut(category)?.remove(name)
     }
 
-    /// Checks if a specific toolchain exists in the compiler list.
+    /// Checks if the manifest contains a specific toolchain entry.
     ///
     /// # Arguments
-    /// * `name` - The name of the toolchain to check.
+    /// * `category` - The category name.
+    /// * `name` - The name of the toolchain.
     ///
     /// # Returns
-    /// `true` if the toolchain exists, `false` otherwise.
-    pub fn contains_compiler(&self, name: &str) -> bool {
-        self.compiler.iter().any(|t| match t {
-            Toolchain::Package(pkg) => pkg.name == name,
-            Toolchain::Release(rel) => rel.name == name,
-        })
+    /// `true` if the entry exists, `false` otherwise.
+    pub fn contains(&self, category: &str, name: &str) -> bool {
+        self.0.get(category).is_some_and(|map| map.contains_key(name))
     }
 }
 
@@ -101,28 +97,16 @@ impl Default for ToolchainManifest {
 }
 
 /// `Toolchain` is an enum that represents a toolchain configuration.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Toolchain {
     Package(PackageToolchain),
     Release(ReleaseToolchain),
 }
 
-impl Toolchain {
-    /// Retrieves the name of the toolchain.
-    pub fn name(&self) -> &str {
-        match self {
-            Toolchain::Package(pkg) => &pkg.name,
-            Toolchain::Release(rel) => &rel.name,
-        }
-    }
-}
-
 /// `PackageToolchain` represents a toolchain defined by a package.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PackageToolchain {
-    /// The name of the toolchain.
-    pub name: String,
     /// The package name associated with the toolchain.
     pub package: String,
     /// An optional field specifying the binary name of the toolchain.
@@ -131,16 +115,14 @@ pub struct PackageToolchain {
 
 impl PackageToolchain {
     /// Creates a new `PackageToolchain`.
-    pub fn new(name: String, package: String, bin: Option<String>) -> Self {
-        PackageToolchain { name, package, bin }
+    pub fn new(package: String, bin: Option<String>) -> Self {
+        PackageToolchain { package, bin }
     }
 }
 
 /// `ReleaseToolchain` represents a toolchain defined by a specific release version.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReleaseToolchain {
-    /// The name of the toolchain.
-    pub name: String,
     /// The version of the toolchain.
     pub version: String,
     /// A map of target platforms to their respective `TargetInfo`.
@@ -149,8 +131,8 @@ pub struct ReleaseToolchain {
 
 impl ReleaseToolchain {
     /// Creates a new `ReleaseToolchain`.
-    pub fn new(name: String, version: String, target: HashMap<String, TargetInfo>) -> Self {
-        ReleaseToolchain { name, version, target }
+    pub fn new(version: String, target: HashMap<String, TargetInfo>) -> Self {
+        ReleaseToolchain { version, target }
     }
 
     /// Retrieves the `TargetInfo` for a specific target platform.
@@ -174,6 +156,7 @@ impl TargetInfo {
         Self { url, hash }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -181,102 +164,82 @@ mod tests {
     #[test]
     fn test_toolchain_manifest_new() {
         let manifest = ToolchainManifest::new();
-        assert!(manifest.detector.is_empty());
-        assert!(manifest.compiler.is_empty());
+        assert!(manifest.0.is_empty());
     }
 
     #[test]
-    fn test_add_detector() {
+    fn test_toolchain_manifest_insert_and_get() {
         let mut manifest = ToolchainManifest::new();
         let toolchain = Toolchain::Package(PackageToolchain::new(
-            "detector1".to_string(),
             "package1".to_string(),
             Some("bin1".to_string()),
         ));
-        manifest.add_detector(toolchain);
-        assert_eq!(manifest.detector.len(), 1);
-        assert_eq!(manifest.detector[0].name(), "detector1");
+
+        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain.clone());
+        let retrieved = manifest.get("detector", "detector1");
+
+        assert!(retrieved.is_some());
     }
 
     #[test]
-    fn test_add_compiler() {
-        let mut manifest = ToolchainManifest::new();
-        let toolchain = Toolchain::Release(ReleaseToolchain::new(
-            "compiler1".to_string(),
-            "1.0.0".to_string(),
-            HashMap::new(),
-        ));
-        manifest.add_compiler(toolchain);
-        assert_eq!(manifest.compiler.len(), 1);
-        assert_eq!(manifest.compiler[0].name(), "compiler1");
-    }
-
-    #[test]
-    fn test_contains_detector() {
+    fn test_toolchain_manifest_remove() {
         let mut manifest = ToolchainManifest::new();
         let toolchain = Toolchain::Package(PackageToolchain::new(
-            "detector1".to_string(),
-            "package1".to_string(),
-            None,
-        ));
-        manifest.add_detector(toolchain);
-        assert!(manifest.contains_detector("detector1"));
-        assert!(!manifest.contains_detector("nonexistent"));
-    }
-
-    #[test]
-    fn test_contains_compiler() {
-        let mut manifest = ToolchainManifest::new();
-        let toolchain = Toolchain::Release(ReleaseToolchain::new(
-            "compiler1".to_string(),
-            "1.0.0".to_string(),
-            HashMap::new(),
-        ));
-        manifest.add_compiler(toolchain);
-        assert!(manifest.contains_compiler("compiler1"));
-        assert!(!manifest.contains_compiler("nonexistent"));
-    }
-
-    #[test]
-    fn test_package_toolchain_new() {
-        let toolchain = PackageToolchain::new(
-            "toolchain1".to_string(),
             "package1".to_string(),
             Some("bin1".to_string()),
-        );
-        assert_eq!(toolchain.name, "toolchain1");
-        assert_eq!(toolchain.package, "package1");
-        assert_eq!(toolchain.bin, Some("bin1".to_string()));
+        ));
+
+        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain.clone());
+        let removed = manifest.remove("detector", "detector1");
+
+        assert!(removed.is_some());
+        assert!(manifest.get("detector", "detector1").is_none());
     }
 
     #[test]
-    fn test_release_toolchain_new() {
-        let targets = HashMap::new();
-        let toolchain =
-            ReleaseToolchain::new("toolchain1".to_string(), "1.0.0".to_string(), targets.clone());
-        assert_eq!(toolchain.name, "toolchain1");
-        assert_eq!(toolchain.version, "1.0.0");
-        assert_eq!(toolchain.target, targets);
+    fn test_toolchain_manifest_contains() {
+        let mut manifest = ToolchainManifest::new();
+        let toolchain = Toolchain::Package(PackageToolchain::new(
+            "package1".to_string(),
+            Some("bin1".to_string()),
+        ));
+
+        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain);
+        assert!(manifest.contains("detector", "detector1"));
+        assert!(!manifest.contains("detector", "nonexistent"));
     }
 
     #[test]
     fn test_release_toolchain_get_target_info() {
-        let mut targets = HashMap::new();
-        targets.insert(
-            "x86_64".to_string(),
+        let mut target_info = HashMap::new();
+        target_info.insert(
+            "x86_64-unknown-linux-gnu".to_string(),
             TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
         );
-        let toolchain =
-            ReleaseToolchain::new("toolchain1".to_string(), "1.0.0".to_string(), targets.clone());
-        let target_info = toolchain.get_target_info("x86_64");
-        assert!(target_info.is_some());
-        assert_eq!(target_info.unwrap().url, "http://example.com");
-        assert_eq!(target_info.unwrap().hash, "hash123");
+
+        let release_toolchain = ReleaseToolchain::new("1.0.0".to_string(), target_info.clone());
+
+        let target = release_toolchain.get_target_info("x86_64-unknown-linux-gnu");
+        assert!(target.is_some());
+        assert_eq!(target.unwrap(), target_info.get("x86_64-unknown-linux-gnu").unwrap());
+
+        let nonexistent_target = release_toolchain.get_target_info("nonexistent");
+        assert!(nonexistent_target.is_none());
     }
 
     #[test]
-    fn test_target_info_new() {
+    fn test_package_toolchain_creation() {
+        let package_toolchain =
+            PackageToolchain::new("package1".to_string(), Some("bin1".to_string()));
+
+        assert_eq!(package_toolchain.package, "package1");
+        assert_eq!(package_toolchain.bin, Some("bin1".to_string()));
+    }
+
+    #[test]
+    fn test_target_info_creation() {
         let target_info = TargetInfo::new("http://example.com".to_string(), "hash123".to_string());
+
         assert_eq!(target_info.url, "http://example.com");
         assert_eq!(target_info.hash, "hash123");
     }

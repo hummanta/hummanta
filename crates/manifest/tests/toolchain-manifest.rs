@@ -18,16 +18,14 @@ use hummanta_manifest::{
 use std::collections::HashMap;
 
 const TOOLCHAIN_TOML: &str = r#"
-[[detector]]
-name = "detector1"
+[detector.detector1]
 package = "package1"
 bin = "bin1"
 
-[[compiler]]
-name = "compiler1"
+[compiler.compiler1]
 version = "1.0.0"
 
-[compiler.target.x86_64]
+[compiler.compiler1.target.x86_64-unknown-linux-gnu]
 url = "http://example.com"
 hash = "hash123"
 "#;
@@ -36,25 +34,22 @@ hash = "hash123"
 fn test_toolchain_manifest_to_toml() {
     let mut manifest = ToolchainManifest::new();
 
-    let detector = Toolchain::Package(PackageToolchain::new(
-        "detector1".to_string(),
-        "package1".to_string(),
-        Some("bin1".to_string()),
-    ));
-    manifest.add_detector(detector);
+    // Add a PackageToolchain
+    let package_toolchain =
+        Toolchain::Package(PackageToolchain::new("package1".to_string(), Some("bin1".to_string())));
+    manifest.insert("detector".to_string(), "detector1".to_string(), package_toolchain);
 
-    let mut targets = HashMap::new();
-    targets.insert(
-        "x86_64".to_string(),
+    // Add a ReleaseToolchain
+    let mut target_info = HashMap::new();
+    target_info.insert(
+        "x86_64-unknown-linux-gnu".to_string(),
         TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
     );
-    let compiler = Toolchain::Release(ReleaseToolchain::new(
-        "compiler1".to_string(),
-        "1.0.0".to_string(),
-        targets,
-    ));
-    manifest.add_compiler(compiler);
+    let release_toolchain =
+        Toolchain::Release(ReleaseToolchain::new("1.0.0".to_string(), target_info));
+    manifest.insert("compiler".to_string(), "compiler1".to_string(), release_toolchain);
 
+    // Serialize to TOML
     let toml_string = toml::to_string(&manifest).expect("Failed to serialize to TOML");
 
     assert_eq!(toml_string.trim(), TOOLCHAIN_TOML.trim());
@@ -62,19 +57,27 @@ fn test_toolchain_manifest_to_toml() {
 
 #[test]
 fn test_toml_to_toolchain_manifest() {
+    // Deserialize from TOML
     let manifest: ToolchainManifest = toml::from_str(TOOLCHAIN_TOML).expect("Failed to parse TOML");
 
-    assert_eq!(manifest.detector.len(), 1);
-    assert_eq!(manifest.detector[0].name(), "detector1");
+    // Validate PackageToolchain
+    let detector = manifest.get("detector", "detector1").expect("Missing detector1");
+    if let Toolchain::Package(pkg) = detector {
+        assert_eq!(pkg.package, "package1");
+        assert_eq!(pkg.bin, Some("bin1".to_string()));
+    } else {
+        panic!("Expected PackageToolchain for detector1");
+    }
 
-    assert_eq!(manifest.compiler.len(), 1);
-    assert_eq!(manifest.compiler[0].name(), "compiler1");
-
-    if let Toolchain::Release(compiler) = &manifest.compiler[0] {
-        let target_info = compiler.get_target_info("x86_64").expect("Target info not found");
+    // Validate ReleaseToolchain
+    let compiler = manifest.get("compiler", "compiler1").expect("Missing compiler1");
+    if let Toolchain::Release(rel) = compiler {
+        assert_eq!(rel.version, "1.0.0");
+        let target_info =
+            rel.get_target_info("x86_64-unknown-linux-gnu").expect("Missing target info");
         assert_eq!(target_info.url, "http://example.com");
         assert_eq!(target_info.hash, "hash123");
     } else {
-        panic!("Expected a ReleaseToolchain");
+        panic!("Expected ReleaseToolchain for compiler1");
     }
 }
