@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 /// `IndexManifest` is a struct used to represent an index manifest.
 ///
