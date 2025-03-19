@@ -18,17 +18,22 @@ use hummanta_manifest::{
 use std::collections::HashMap;
 
 const TOOLCHAIN_TOML: &str = r#"
-[detector.detector1]
-package = "package1"
-bin = "bin1"
+    [detector.detector1]
+        package = "package1"
+        bin = "bin1"
 
-[compiler.compiler1]
-version = "1.0.0"
+    [compiler.compiler1]
+        version = "1.0.0"
 
-[compiler.compiler1.target.x86_64-unknown-linux-gnu]
-url = "http://example.com"
-hash = "hash123"
+    [compiler.compiler1.target.x86_64-unknown-linux-gnu]
+        url = "http://example.com"
+        hash = "hash123"
 "#;
+
+fn normalize_toml(toml_str: &str) -> String {
+    let value: toml::Value = toml_str.parse().unwrap();
+    value.to_string()
+}
 
 #[test]
 fn test_toolchain_manifest_to_toml() {
@@ -52,7 +57,7 @@ fn test_toolchain_manifest_to_toml() {
     // Serialize to TOML
     let toml_string = toml::to_string(&manifest).expect("Failed to serialize to TOML");
 
-    assert_eq!(toml_string.trim(), TOOLCHAIN_TOML.trim());
+    assert_eq!(normalize_toml(&toml_string), normalize_toml(TOOLCHAIN_TOML));
 }
 
 #[test]

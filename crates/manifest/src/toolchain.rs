@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// `ToolchainManifest` represents the structure of a toolchain manifest file.
 ///
@@ -24,15 +23,15 @@ use serde::{Deserialize, Serialize};
 /// example:
 /// ```toml
 /// [detector.detector1]
-/// package = "package1"
-/// bin = "bin1"
-///
+///     package = "package1"
+///     bin = "bin1"
+/// #
 /// [compiler.compiler1]
-/// version = "1.0.0"
-///
+///     version = "1.0.0"
+/// #
 // [compiler.compiler1.target.x86_64-unknown-linux-gnu]
-/// url = "http://example.com"
-/// hash = "hash123"
+///     url = "http://example.com"
+///     hash = "hash123"
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ToolchainManifest(HashMap<String, HashMap<String, Toolchain>>);
