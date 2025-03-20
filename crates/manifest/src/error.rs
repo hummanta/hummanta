@@ -14,12 +14,15 @@
 
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, ManifestError>;
+pub type ManifestResult<T> = std::result::Result<T, ManifestError>;
 
 #[derive(Debug, Error)]
 pub enum ManifestError {
-    #[error("Failed to parse the manifest: {0}")]
-    ParseError(#[from] toml::de::Error),
+    #[error("Failed to deserialize the manifest: {0}")]
+    DeserializeError(#[from] toml::de::Error),
+
+    #[error("Failed to serialize the manifest: {0}")]
+    SerializeError(#[from] toml::ser::Error),
 
     #[error("Manifest file not found at path: {0}")]
     FileNotFound(String),

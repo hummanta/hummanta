@@ -19,16 +19,14 @@ use std::{
 };
 
 use clap::Parser;
-use hummanta_manifest::{
-    IndexManifest, PackageToolchain, ReleaseToolchain, TargetInfo, Toolchain, ToolchainManifest,
-};
+use hummanta_manifest::*;
 use sha2::{Digest, Sha256};
 use tokio::{fs::File, io::AsyncReadExt};
 
-pub const HUMMANTA_GITHUB_REPO: &str = "hummanta/hummanta";
+const HUMMANTA_GITHUB_REPO: &str = "hummanta/hummanta";
 
 #[derive(Debug, Parser)]
-pub struct Arguments {
+struct Arguments {
     /// Specify the path of the manifest directory
     #[arg(short = 'p', long = "path")]
     pub path: PathBuf,
@@ -85,7 +83,7 @@ fn process_index_manifest(input_path: &Path, output_path: &Path) {
 async fn process_toolchain_manifests(input_path: &Path, output_path: &Path, opt: &ReleaseOption) {
     // Read the index.toml file and convert it into an IndexManifest struct.
     let index_input_path = input_path.join("index.toml");
-    let manifest = IndexManifest::from_file(&index_input_path)
+    let manifest = IndexManifest::read(&index_input_path)
         .unwrap_or_else(|_| panic!("Failed to parse TOML at {}", index_input_path.display()));
 
     // For each toolchain entry in the IndexManifest, read the corresponding
@@ -102,7 +100,7 @@ async fn process_toolchain_manifests(input_path: &Path, output_path: &Path, opt:
 
 /// Process the toolchain manifest
 async fn process_toolchain_manifest(input_path: &Path, output_path: &Path, opt: &ReleaseOption) {
-    let manifest = ToolchainManifest::from_file(input_path)
+    let manifest = ToolchainManifest::read(input_path)
         .unwrap_or_else(|_| panic!("Failed to parse TOML at {}", input_path.display()));
 
     // For each toolchain entry in the ToolchainManifest, convert it into
@@ -119,9 +117,8 @@ async fn process_toolchain_manifest(input_path: &Path, output_path: &Path, opt: 
     }
 
     // write the result to the output path.
-    let toml_string = toml::to_string(&result)
-        .unwrap_or_else(|_| panic!("Failed to serialize to TOML: {}", input_path.display()));
-    fs::write(output_path, toml_string)
+    result
+        .write(output_path)
         .unwrap_or_else(|_| panic!("Failed to write to output path: {}", output_path.display()));
 }
 

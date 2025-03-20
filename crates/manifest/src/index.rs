@@ -20,7 +20,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::{error::Result, ManifestError};
+use crate::{error::ManifestResult, ManifestError};
 
 /// `IndexManifest` is a struct used to represent an index manifest.
 ///
@@ -95,8 +95,8 @@ impl IndexManifest
 where
     Self: FromStr,
 {
-    /// Load the index manifest from a file.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+    /// Read the index manifest from a file.
+    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
         let mut file = std::fs::File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
@@ -108,7 +108,7 @@ where
 impl std::str::FromStr for IndexManifest {
     type Err = ManifestError;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> ManifestResult<Self> {
         toml::from_str(s).map_err(ManifestError::from)
     }
 }

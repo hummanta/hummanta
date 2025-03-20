@@ -15,7 +15,7 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
 
-use crate::{ManifestError, Result};
+use crate::{ManifestError, ManifestResult};
 
 /// `ToolchainManifest` represents the structure of a toolchain manifest file.
 ///
@@ -106,20 +106,28 @@ impl ToolchainManifest
 where
     Self: FromStr,
 {
-    /// Load the index manifest from a file.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+    /// Read the toolchain manifest from a file.
+    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
         let mut file = std::fs::File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
 
         Self::from_str(&contents)
     }
+
+    /// Write the toolchain manifest to a file.
+    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
+        let toml_string = toml::to_string(&self)?;
+        std::fs::write(path, toml_string)?;
+
+        Ok(())
+    }
 }
 
 impl std::str::FromStr for ToolchainManifest {
     type Err = ManifestError;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         toml::from_str(s).map_err(ManifestError::from)
     }
 }
