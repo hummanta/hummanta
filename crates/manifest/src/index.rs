@@ -13,7 +13,14 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    io::Read,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
+
+use crate::{error::Result, ManifestError};
 
 /// `IndexManifest` is a struct used to represent an index manifest.
 ///
@@ -71,11 +78,38 @@ impl IndexManifest {
     pub fn contains(&self, name: &str) -> bool {
         self.0.contains_key(name)
     }
+
+    /// Returns an iterator over the manifest.
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &PathBuf)> {
+        self.0.iter()
+    }
 }
 
 impl Default for IndexManifest {
     fn default() -> Self {
         IndexManifest::new()
+    }
+}
+
+impl IndexManifest
+where
+    Self: FromStr,
+{
+    /// Load the index manifest from a file.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let mut file = std::fs::File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        Self::from_str(&contents)
+    }
+}
+
+impl std::str::FromStr for IndexManifest {
+    type Err = ManifestError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        toml::from_str(s).map_err(ManifestError::from)
     }
 }
 

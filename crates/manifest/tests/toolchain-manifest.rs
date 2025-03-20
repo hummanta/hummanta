@@ -21,11 +21,12 @@ const TOOLCHAIN_TOML: &str = r#"
     [detector.detector1]
         package = "package1"
         bin = "bin1"
+        targets = ["x86_64-unknown-linux-gnu"]
 
     [compiler.compiler1]
         version = "1.0.0"
 
-    [compiler.compiler1.target.x86_64-unknown-linux-gnu]
+    [compiler.compiler1.targets.x86_64-unknown-linux-gnu]
         url = "http://example.com"
         hash = "hash123"
 "#;
@@ -40,18 +41,20 @@ fn test_toolchain_manifest_to_toml() {
     let mut manifest = ToolchainManifest::new();
 
     // Add a PackageToolchain
-    let package_toolchain =
-        Toolchain::Package(PackageToolchain::new("package1".to_string(), Some("bin1".to_string())));
+    let package_toolchain = Toolchain::Package(PackageToolchain::new(
+        "package1".to_string(),
+        Some("bin1".to_string()),
+        vec!["x86_64-unknown-linux-gnu".to_string()],
+    ));
     manifest.insert("detector".to_string(), "detector1".to_string(), package_toolchain);
 
     // Add a ReleaseToolchain
-    let mut target_info = HashMap::new();
-    target_info.insert(
+    let mut targets = HashMap::new();
+    targets.insert(
         "x86_64-unknown-linux-gnu".to_string(),
         TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
     );
-    let release_toolchain =
-        Toolchain::Release(ReleaseToolchain::new("1.0.0".to_string(), target_info));
+    let release_toolchain = Toolchain::Release(ReleaseToolchain::new("1.0.0".to_string(), targets));
     manifest.insert("compiler".to_string(), "compiler1".to_string(), release_toolchain);
 
     // Serialize to TOML
@@ -70,6 +73,7 @@ fn test_toml_to_toolchain_manifest() {
     if let Toolchain::Package(pkg) = detector {
         assert_eq!(pkg.package, "package1");
         assert_eq!(pkg.bin, Some("bin1".to_string()));
+        assert_eq!(pkg.targets, vec!["x86_64-unknown-linux-gnu".to_string()]);
     } else {
         panic!("Expected PackageToolchain for detector1");
     }

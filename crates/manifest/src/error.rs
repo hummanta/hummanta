@@ -12,11 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod error;
-mod index;
-mod toolchain;
+use thiserror::Error;
 
-// Re-exports.
-pub use error::*;
-pub use index::IndexManifest;
-pub use toolchain::*;
+pub type Result<T> = std::result::Result<T, ManifestError>;
+
+#[derive(Debug, Error)]
+pub enum ManifestError {
+    #[error("Failed to parse the manifest: {0}")]
+    ParseError(#[from] toml::de::Error),
+
+    #[error("Manifest file not found at path: {0}")]
+    FileNotFound(String),
+
+    #[error("Invalid manifest format: {0}")]
+    InvalidFormat(String),
+
+    #[error("IO error occurred: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("Unknown error: {0}")]
+    Unknown(String),
+}

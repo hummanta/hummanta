@@ -21,3 +21,9 @@ fmt:
 # Test the project
 test:
     RUST_BACKTRACE=1 cargo test --workspace --all-features --verbose
+
+# Generate the manifests
+manifest local="true" options="": (build options)
+    cargo run {{options}} \
+        --package hummanta-manifest-generator -- \
+        --path manifests {{ if local == "true" { "--local" } else { "" } }}

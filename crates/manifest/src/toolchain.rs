@@ -13,7 +13,9 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
+
+use crate::{ManifestError, Result};
 
 /// `ToolchainManifest` represents the structure of a toolchain manifest file.
 ///
@@ -25,11 +27,12 @@ use std::collections::HashMap;
 /// [detector.detector1]
 ///     package = "package1"
 ///     bin = "bin1"
+///     targets = ["x86_64-unknown-linux-gnu"]
 /// #
 /// [compiler.compiler1]
 ///     version = "1.0.0"
 /// #
-// [compiler.compiler1.target.x86_64-unknown-linux-gnu]
+// [compiler.compiler1.targets.x86_64-unknown-linux-gnu]
 ///     url = "http://example.com"
 ///     hash = "hash123"
 /// ```
@@ -87,11 +90,37 @@ impl ToolchainManifest {
     pub fn contains(&self, category: &str, name: &str) -> bool {
         self.0.get(category).is_some_and(|map| map.contains_key(name))
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &HashMap<String, Toolchain>)> {
+        self.0.iter()
+    }
 }
 
 impl Default for ToolchainManifest {
     fn default() -> Self {
         ToolchainManifest::new()
+    }
+}
+
+impl ToolchainManifest
+where
+    Self: FromStr,
+{
+    /// Load the index manifest from a file.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let mut file = std::fs::File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        Self::from_str(&contents)
+    }
+}
+
+impl std::str::FromStr for ToolchainManifest {
+    type Err = ManifestError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        toml::from_str(s).map_err(ManifestError::from)
     }
 }
 
@@ -110,12 +139,19 @@ pub struct PackageToolchain {
     pub package: String,
     /// An optional field specifying the binary name of the toolchain.
     pub bin: Option<String>,
+    /// Specifying the target platforms for the toolchain.
+    pub targets: Vec<String>,
 }
 
 impl PackageToolchain {
     /// Creates a new `PackageToolchain`.
-    pub fn new(package: String, bin: Option<String>) -> Self {
-        PackageToolchain { package, bin }
+    pub fn new(package: String, bin: Option<String>, targets: Vec<String>) -> Self {
+        PackageToolchain { package, bin, targets }
+    }
+
+    // /// Retrieves the final binary name of the toolchain.
+    pub fn name(&self) -> &str {
+        self.bin.as_ref().unwrap_or(&self.package)
     }
 }
 
@@ -125,18 +161,24 @@ pub struct ReleaseToolchain {
     /// The version of the toolchain.
     pub version: String,
     /// A map of target platforms to their respective `TargetInfo`.
-    pub target: HashMap<String, TargetInfo>,
+    pub targets: HashMap<String, TargetInfo>,
+}
+
+impl From<ReleaseToolchain> for Toolchain {
+    fn from(val: ReleaseToolchain) -> Self {
+        Toolchain::Release(val)
+    }
 }
 
 impl ReleaseToolchain {
     /// Creates a new `ReleaseToolchain`.
-    pub fn new(version: String, target: HashMap<String, TargetInfo>) -> Self {
-        ReleaseToolchain { version, target }
+    pub fn new(version: String, targets: HashMap<String, TargetInfo>) -> Self {
+        ReleaseToolchain { version, targets }
     }
 
     /// Retrieves the `TargetInfo` for a specific target platform.
     pub fn get_target_info(&self, platform: &str) -> Option<&TargetInfo> {
-        self.target.get(platform)
+        self.targets.get(platform)
     }
 }
 
@@ -158,6 +200,8 @@ impl TargetInfo {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
 
     #[test]
@@ -172,6 +216,7 @@ mod tests {
         let toolchain = Toolchain::Package(PackageToolchain::new(
             "package1".to_string(),
             Some("bin1".to_string()),
+            vec!["x86_64-unknown-linux-gnu".to_string()],
         ));
 
         manifest.insert("detector".to_string(), "detector1".to_string(), toolchain.clone());
@@ -186,6 +231,7 @@ mod tests {
         let toolchain = Toolchain::Package(PackageToolchain::new(
             "package1".to_string(),
             Some("bin1".to_string()),
+            vec!["x86_64-unknown-linux-gnu".to_string()],
         ));
 
         manifest.insert("detector".to_string(), "detector1".to_string(), toolchain.clone());
@@ -201,6 +247,7 @@ mod tests {
         let toolchain = Toolchain::Package(PackageToolchain::new(
             "package1".to_string(),
             Some("bin1".to_string()),
+            vec!["x86_64-unknown-linux-gnu".to_string()],
         ));
 
         manifest.insert("detector".to_string(), "detector1".to_string(), toolchain);
@@ -210,17 +257,17 @@ mod tests {
 
     #[test]
     fn test_release_toolchain_get_target_info() {
-        let mut target_info = HashMap::new();
-        target_info.insert(
+        let mut targets = HashMap::new();
+        targets.insert(
             "x86_64-unknown-linux-gnu".to_string(),
             TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
         );
 
-        let release_toolchain = ReleaseToolchain::new("1.0.0".to_string(), target_info.clone());
+        let release_toolchain = ReleaseToolchain::new("1.0.0".to_string(), targets.clone());
 
-        let target = release_toolchain.get_target_info("x86_64-unknown-linux-gnu");
-        assert!(target.is_some());
-        assert_eq!(target.unwrap(), target_info.get("x86_64-unknown-linux-gnu").unwrap());
+        let targets2 = release_toolchain.get_target_info("x86_64-unknown-linux-gnu");
+        assert!(targets2.is_some());
+        assert_eq!(targets2.unwrap(), targets.get("x86_64-unknown-linux-gnu").unwrap());
 
         let nonexistent_target = release_toolchain.get_target_info("nonexistent");
         assert!(nonexistent_target.is_none());
@@ -228,11 +275,15 @@ mod tests {
 
     #[test]
     fn test_package_toolchain_creation() {
-        let package_toolchain =
-            PackageToolchain::new("package1".to_string(), Some("bin1".to_string()));
+        let package_toolchain = PackageToolchain::new(
+            "package1".to_string(),
+            Some("bin1".to_string()),
+            vec!["x86_64-unknown-linux-gnu".to_string()],
+        );
 
         assert_eq!(package_toolchain.package, "package1");
         assert_eq!(package_toolchain.bin, Some("bin1".to_string()));
+        assert_eq!(package_toolchain.targets, vec!["x86_64-unknown-linux-gnu".to_string()]);
     }
 
     #[test]
