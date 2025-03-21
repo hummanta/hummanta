@@ -5,3 +5,4 @@ edition.workspace = true
 
 [dependencies]
 hummanta-detection.workspace = true
+walkdir.workspace = true
