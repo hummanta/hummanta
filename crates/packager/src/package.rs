@@ -54,11 +54,9 @@ async fn process(path: PathBuf, output_dir: &Path, version: &str, target: &str) 
 }
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::{self, File},
-        io::Write,
-        os::unix::fs::PermissionsExt,
-    };
+    #[cfg(unix)]
+    use std::{fs, os::unix::fs::PermissionsExt};
+    use std::{fs::File, io::Write};
     use tempfile::tempdir;
 
     use super::*;

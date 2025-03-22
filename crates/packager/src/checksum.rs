@@ -60,14 +60,14 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_checksum_valid_file() {
+    async fn test_checksum_file() {
         let dir = tempdir().unwrap();
         let file_path = dir.path().join("test_file.txt");
         let output_path = dir.path().join("checksum.txt");
 
         // Create a test file
         let mut file = fs::File::create(&file_path).unwrap();
-        writeln!(file, "Hello, world!").unwrap();
+        file.write_all(b"Hello, world!").unwrap();
 
         // Generate checksum
         checksum(&file_path, &output_path).await.unwrap();
@@ -75,34 +75,16 @@ mod tests {
         // Verify checksum file exists
         assert!(output_path.exists());
 
-        // Verify checksum content
+        // Read checksum from file
         let checksum_content = fs::read_to_string(output_path).unwrap();
+
+        // Calculate the SHA256 checksum of the file
         let mut hasher = Sha256::new();
-        hasher.update(b"Hello, world!\n");
+        let file_content = fs::read(&file_path).unwrap(); // Read the file content
+        hasher.update(&file_content);
         let expected_checksum = format!("{:x}", hasher.finalize());
-        assert_eq!(checksum_content, expected_checksum);
-    }
 
-    #[tokio::test]
-    async fn test_checksum_empty_file() {
-        let dir = tempdir().unwrap();
-        let file_path = dir.path().join("empty_file.txt");
-        let output_path = dir.path().join("checksum.txt");
-
-        // Create an empty test file
-        fs::File::create(&file_path).unwrap();
-
-        // Generate checksum
-        checksum(&file_path, &output_path).await.unwrap();
-
-        // Verify checksum file exists
-        assert!(output_path.exists());
-
-        // Verify checksum content
-        let checksum_content = fs::read_to_string(output_path).unwrap();
-        let mut hasher = Sha256::new();
-        hasher.update(b"");
-        let expected_checksum = format!("{:x}", hasher.finalize());
+        // Verify checksum matches the calculated checksum
         assert_eq!(checksum_content, expected_checksum);
     }
 

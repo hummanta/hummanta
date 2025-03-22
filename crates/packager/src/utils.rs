@@ -28,11 +28,9 @@ pub fn is_executable(path: &Path) -> bool {
 }
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::{self, File},
-        os::unix::fs::PermissionsExt,
-        path::PathBuf,
-    };
+    #[cfg(unix)]
+    use std::{fs, os::unix::fs::PermissionsExt};
+    use std::{fs::File, path::PathBuf};
 
     use super::*;
 
