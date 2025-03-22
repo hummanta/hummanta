@@ -30,8 +30,8 @@ pub fn is_executable(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     #[cfg(unix)]
-    use std::{fs, os::unix::fs::PermissionsExt};
-    use std::{fs::File, path::PathBuf};
+    use std::os::unix::fs::PermissionsExt;
+    use std::{fs, path::PathBuf};
 
     use super::*;
 
@@ -41,7 +41,8 @@ mod tests {
         {
             let temp_dir = tempfile::tempdir().unwrap();
             let file_path = temp_dir.path().join("test_executable");
-            File::create(&file_path).unwrap();
+            fs::File::create(&file_path).unwrap();
+
             let mut perms = fs::metadata(&file_path).unwrap().permissions();
             perms.set_mode(0o755); // Set executable permissions
             fs::set_permissions(&file_path, perms).unwrap();
@@ -56,7 +57,8 @@ mod tests {
         {
             let temp_dir = tempfile::tempdir().unwrap();
             let file_path = temp_dir.path().join("test_non_executable");
-            File::create(&file_path).unwrap();
+            fs::File::create(&file_path).unwrap();
+
             let mut perms = fs::metadata(&file_path).unwrap().permissions();
             perms.set_mode(0o644); // No executable permissions
             fs::set_permissions(&file_path, perms).unwrap();
