@@ -49,6 +49,7 @@ pub async fn checksum(file: &Path, output: &Path) -> Result<()> {
 
     // Write the checksum to the file
     checksum_file.write_all(checksum.as_bytes()).await.context("Failed to write checksum")?;
+    checksum_file.flush().await.context("Failed to flush checksum")?;
 
     Ok(())
 }
