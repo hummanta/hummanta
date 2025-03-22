@@ -33,7 +33,7 @@ pub async fn package(output_dir: &Path, version: &str, target: &str) -> Result<(
 
 /// Process a single executable by creating a tar.gz archive and checksum
 async fn process(path: PathBuf, output_dir: &Path, version: &str, target: &str) -> Result<()> {
-    let bin_name = path.file_name().unwrap().to_string_lossy().to_string();
+    let bin_name = path.file_stem().unwrap().to_string_lossy().to_string();
     let archive_name = format!("{}-{}-{}.tar.gz", bin_name, version, target);
     let archive_path = output_dir.join(&archive_name);
     let checksum_path = output_dir.join(format!("{}.sha256", archive_name));
