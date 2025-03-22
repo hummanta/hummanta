@@ -73,7 +73,7 @@ mod tests {
         {
             let temp_dir = tempfile::tempdir().unwrap();
             let file_path = temp_dir.path().join("test_executable.exe");
-            File::create(&file_path).unwrap();
+            fs::File::create(&file_path).unwrap();
 
             assert!(is_executable(&file_path));
         }
@@ -85,7 +85,7 @@ mod tests {
         {
             let temp_dir = tempfile::tempdir().unwrap();
             let file_path = temp_dir.path().join("test_non_executable.txt");
-            File::create(&file_path).unwrap();
+            fs::File::create(&file_path).unwrap();
 
             assert!(!is_executable(&file_path));
         }
