@@ -27,3 +27,8 @@ manifest local="true" options="": (build options)
     cargo run {{options}} \
         --package hummanta-manifest-generator -- \
         --path manifests {{ if local == "true" { "--local" } else { "" } }}
+
+# Package executables and generate checksums
+package target="" version="" profile="":
+    cargo run --package hummanta-packager -- \
+        --target={{target}} --version={{version}} --profile={{profile}}
