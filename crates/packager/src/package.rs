@@ -52,11 +52,11 @@ async fn process(path: PathBuf, output_dir: &Path, version: &str, target: &str) 
 
     Ok(())
 }
+
 #[cfg(test)]
 mod tests {
     #[cfg(unix)]
     use std::{fs, os::unix::fs::PermissionsExt};
-    use std::{fs::File, io::Write};
     use tempfile::tempdir;
 
     use super::*;
@@ -66,24 +66,34 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let output_dir = temp_dir.path();
 
-        // Create a mock executable file
-        let executable_path = output_dir.join("mock_executable");
-        let mut file = File::create(&executable_path).unwrap();
-        file.write_all(b"#!/bin/bash\necho Hello").unwrap();
+        // Dynamically set the file name and target platform based on the operating system
+        let (executable_name, target) = if cfg!(windows) {
+            ("mock-executable.exe", "x86_64-pc-windows-msvc") // For Windows
+        } else {
+            ("mock-executable", "x86_64-unknown-linux-gnu") // For other platforms
+        };
+
+        // Create an empty mock executable file
+        let executable_path = output_dir.join(executable_name);
+        fs::File::create(&executable_path).unwrap(); // Simply create the file
+
         #[cfg(unix)]
         {
+            // Set executable permissions for Unix platforms
             fs::set_permissions(&executable_path, fs::Permissions::from_mode(0o755)).unwrap();
         }
 
         let version = "v1.0.0";
-        let target = "x86_64-unknown-linux-gnu";
 
+        // Call the package function to process the file
         let result = package(output_dir, version, target).await;
         assert!(result.is_ok());
 
-        let archive_name = format!("mock_executable-{}-{}.tar.gz", version, target);
+        // Construct the archive and checksum file names
+        let archive_name = format!("mock-executable-{}-{}.tar.gz", version, target);
         let checksum_name = format!("{}.sha256", archive_name);
 
+        // Ensure the archive and checksum files are created
         assert!(output_dir.join(&archive_name).exists());
         assert!(output_dir.join(&checksum_name).exists());
     }
@@ -93,48 +103,29 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let output_dir = temp_dir.path();
 
+        // Dynamically set the target platform based on the operating system
+        let target = if cfg!(windows) {
+            "x86_64-pc-windows-msvc" // For Windows
+        } else {
+            "x86_64-unknown-linux-gnu" // For other platforms
+        };
+
         // Create a non-executable file
-        let non_executable_path = output_dir.join("non_executable");
-        let mut file = File::create(&non_executable_path).unwrap();
-        file.write_all(b"Hello, world!").unwrap();
+        let non_executable_path = output_dir.join("non-executable");
+        fs::File::create(&non_executable_path).unwrap();
 
         let version = "v1.0.0";
-        let target = "x86_64-unknown-linux-gnu";
 
+        // Call the package function to process the file
         let result = package(output_dir, version, target).await;
         assert!(result.is_ok());
 
-        let archive_name = format!("non_executable-{}-{}.tar.gz", version, target);
+        // Construct the archive and checksum file names
+        let archive_name = format!("non-executable-{}-{}.tar.gz", version, target);
         let checksum_name = format!("{}.sha256", archive_name);
 
+        // Ensure that the archive and checksum files do not exist since the file is not executable
         assert!(!output_dir.join(&archive_name).exists());
         assert!(!output_dir.join(&checksum_name).exists());
-    }
-
-    #[tokio::test]
-    async fn test_process_creates_archive_and_checksum() {
-        let temp_dir = tempdir().unwrap();
-        let output_dir = temp_dir.path();
-
-        // Create a mock executable file
-        let executable_path = output_dir.join("mock_executable");
-        let mut file = File::create(&executable_path).unwrap();
-        file.write_all(b"#!/bin/bash\necho Hello").unwrap();
-        #[cfg(unix)]
-        {
-            fs::set_permissions(&executable_path, fs::Permissions::from_mode(0o755)).unwrap();
-        }
-
-        let version = "v1.0.0";
-        let target = "x86_64-unknown-linux-gnu";
-
-        let result = process(executable_path.clone(), output_dir, version, target).await;
-        assert!(result.is_ok());
-
-        let archive_name = format!("mock_executable-{}-{}.tar.gz", version, target);
-        let checksum_name = format!("{}.sha256", archive_name);
-
-        assert!(output_dir.join(&archive_name).exists());
-        assert!(output_dir.join(&checksum_name).exists());
     }
 }

@@ -30,6 +30,7 @@ pub async fn archive(src: &Path, dest: &Path) -> Result<()> {
 
     Ok(())
 }
+
 #[cfg(test)]
 mod tests {
     use std::{fs, io::Write};

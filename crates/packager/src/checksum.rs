@@ -53,6 +53,7 @@ pub async fn checksum(file: &Path, output: &Path) -> Result<()> {
 
     Ok(())
 }
+
 #[cfg(test)]
 mod tests {
     use std::{fs, io::Write};

@@ -77,6 +77,7 @@ impl Arguments {
         output_dir
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

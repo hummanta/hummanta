@@ -26,6 +26,7 @@ pub fn is_executable(path: &Path) -> bool {
         path.extension().map(|ext| ext == "exe").unwrap_or(false)
     }
 }
+
 #[cfg(test)]
 mod tests {
     #[cfg(unix)]
