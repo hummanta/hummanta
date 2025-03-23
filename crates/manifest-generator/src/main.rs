@@ -20,54 +20,121 @@ use std::{
 
 use clap::Parser;
 use hummanta_manifest::*;
-use sha2::{Digest, Sha256};
-use tokio::{fs::File, io::AsyncReadExt};
 
-const HUMMANTA_GITHUB_REPO: &str = "hummanta/hummanta";
+const HUMMANTA_GITHUB_REPO: &str = "github.com/hummanta/hummanta";
 
 #[derive(Debug, Parser)]
 struct Arguments {
     /// Specify the path of the manifest directory
-    #[arg(short = 'p', long = "path")]
+    #[arg(long = "path")]
     pub path: PathBuf,
 
     /// Generate local manifests with file paths
-    #[arg(short = 'l', long = "local")]
+    #[arg(long = "local")]
     pub local: bool,
+
+    /// The profile to build with (e.g., release)
+    #[arg(long = "profile")]
+    profile: String,
+
+    /// The target triple (e.g., x86_64-unknown-linux-gnu)
+    #[arg(long = "target")]
+    target: String,
+
+    /// The version of the package (e.g., v0.1.1)
+    #[arg(long = "version")]
+    version: String,
 }
 
-struct ReleaseOption {
-    local: bool,
-    repo: String,
-    version: String,
+impl Arguments {
+    // Determine the profile, defaulting to "debug" if not set
+    pub fn profile(&self) -> String {
+        if self.profile.is_empty() {
+            env::var("CARGO_CFG_PROFILE").unwrap_or_else(|_| "debug".to_string())
+        } else {
+            self.profile
+                .eq("dev")
+                .then(|| "debug".to_string())
+                .unwrap_or_else(|| self.profile.clone())
+        }
+    }
+
+    // Determine the target triple, defaulting to the system's target if not set
+    pub fn target(&self) -> String {
+        if self.target.is_empty() {
+            target_triple::TARGET.to_string()
+        } else {
+            self.target.clone()
+        }
+    }
+
+    // Determine the version, defaulting to CARGO_PKG_VERSION with 'v' prefix if not set
+    pub fn version(&self) -> String {
+        if self.version.is_empty() {
+            format!("v{}", env!("CARGO_PKG_VERSION"))
+        } else {
+            self.version.clone()
+        }
+    }
+
+    // Get the output directory based on the target and profile
+    pub fn output_dir(&self) -> PathBuf {
+        let target = self.target();
+        let profile = self.profile();
+
+        let target_dir = env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".to_string());
+        let output_dir = if self.target.is_empty() {
+            Path::new(&target_dir).join(profile)
+        } else {
+            Path::new(&target_dir).join(target).join(profile)
+        };
+
+        output_dir
+    }
 }
 
 #[tokio::main]
 async fn main() {
     let args = Arguments::parse();
 
+    // Prepare the input directory
+    if !args.path.exists() {
+        eprintln!("Error: input directory {:?} does not exist.", args.path);
+        std::process::exit(1);
+    }
+
     // Prepare the output directory
-    let output_dir = output_dir().join("manifests");
+    let output_dir = args.output_dir();
     if !output_dir.exists() {
-        fs::create_dir_all(&output_dir).expect("Failed to create output directory");
+        eprintln!("Error: output directory {:?} does not exist.", output_dir);
+        std::process::exit(1);
+    }
+
+    // Prepare the manifest output directory
+    let manifests_output_dir = output_dir.join("manifests");
+    if !manifests_output_dir.exists() {
+        fs::create_dir_all(&output_dir).expect("Failed to create output directory for manifests");
     }
 
     // Process the toolchain manifests.
     let toolchain_input_dir = args.path.join("toolchains");
-    let toolchain_output_dir = output_dir.join("toolchains");
+    if !toolchain_input_dir.exists() {
+        eprintln!("Error: toolchains directory {:?} does not exist.", toolchain_input_dir);
+        std::process::exit(1);
+    }
 
+    let toolchain_output_dir = manifests_output_dir.join("toolchains");
     if !toolchain_output_dir.exists() {
         fs::create_dir_all(&toolchain_output_dir)
             .expect("Failed to create toolchain output directory");
     }
 
-    let opt = ReleaseOption {
-        local: args.local,
-        repo: HUMMANTA_GITHUB_REPO.to_owned(),
-        version: env!("CARGO_PKG_VERSION").to_owned(),
-    };
+    println!("Generating manifests of toolchains");
 
-    process_toolchain_manifests(&toolchain_input_dir, &toolchain_output_dir, &opt).await;
+    // Call the toolchain generate function to handle processing.
+    process_toolchain_manifests(&toolchain_input_dir, &toolchain_output_dir, &args).await;
+
+    println!("Done!");
 }
 
 /// Process the index manifest
@@ -80,7 +147,7 @@ fn process_index_manifest(input_path: &Path, output_path: &Path) {
 }
 
 // process the toolchain manifests
-async fn process_toolchain_manifests(input_path: &Path, output_path: &Path, opt: &ReleaseOption) {
+async fn process_toolchain_manifests(input_path: &Path, output_path: &Path, args: &Arguments) {
     // Read the index.toml file and convert it into an IndexManifest struct.
     let index_input_path = input_path.join("index.toml");
     let manifest = IndexManifest::read(&index_input_path)
@@ -90,7 +157,7 @@ async fn process_toolchain_manifests(input_path: &Path, output_path: &Path, opt:
     // toolchain file, parse it into a ToolchainManifest struct, and write
     // the serialized struct to the output path.
     for (_, path) in manifest.iter() {
-        process_toolchain_manifest(&input_path.join(path), &output_path.join(path), opt).await;
+        process_toolchain_manifest(&input_path.join(path), &output_path.join(path), args).await;
     }
 
     // Copy the index.toml file to the output directory.
@@ -99,7 +166,7 @@ async fn process_toolchain_manifests(input_path: &Path, output_path: &Path, opt:
 }
 
 /// Process the toolchain manifest
-async fn process_toolchain_manifest(input_path: &Path, output_path: &Path, opt: &ReleaseOption) {
+async fn process_toolchain_manifest(input_path: &Path, output_path: &Path, args: &Arguments) {
     let manifest = ToolchainManifest::read(input_path)
         .unwrap_or_else(|_| panic!("Failed to parse TOML at {}", input_path.display()));
 
@@ -110,8 +177,14 @@ async fn process_toolchain_manifest(input_path: &Path, output_path: &Path, opt: 
     for (category, tools) in manifest.iter() {
         for (name, toolchain) in tools {
             if let Toolchain::Package(package) = toolchain {
-                let release = build_release_toolchain(package, opt).await.into();
-                result.insert(category.clone(), name.clone(), release);
+                let release = build_release_toolchain(package, args).await;
+
+                println!(
+                    "Generated manifests for package: {name} with targets: {:?}",
+                    &release.targets.keys()
+                );
+
+                result.insert(category.clone(), name.clone(), release.into());
             }
         }
     }
@@ -123,67 +196,45 @@ async fn process_toolchain_manifest(input_path: &Path, output_path: &Path, opt: 
 }
 
 /// Build the release toolchain
-async fn build_release_toolchain(pkg: &PackageToolchain, opt: &ReleaseOption) -> ReleaseToolchain {
-    let version = opt.version.clone();
-    let target = match opt.local {
-        true => build_local_target(pkg).await,
-        false => build_github_target(pkg, &opt.repo, &opt.version),
-    };
-    ReleaseToolchain::new(version, target)
-}
-
-/// Build the local target, the url is a file path, and just one target is supported.
-async fn build_local_target(pkg: &PackageToolchain) -> HashMap<String, TargetInfo> {
+async fn build_release_toolchain(pkg: &PackageToolchain, args: &Arguments) -> ReleaseToolchain {
     let mut targets = HashMap::new();
-
-    let target = target_triple::TARGET;
-    let path = output_dir().join(pkg.name()).canonicalize().expect("Failed to canonicalize");
-    let url = format!("file://{}", path.display());
-    let hash = calculate_sha256(&path).await.expect("Failed to calculate SHA256");
-    targets.insert(target.to_string(), TargetInfo::new(url, hash));
-
-    targets
-}
-
-/// Build the github target, the url is a github release url.
-fn build_github_target(
-    pkg: &PackageToolchain,
-    repo: &str,
-    version: &str,
-) -> HashMap<String, TargetInfo> {
-    let mut targets = HashMap::new();
+    let output_dir = args.output_dir();
+    let version = args.version();
+    let bin_name = pkg.name();
 
     for target in &pkg.targets {
-        let file = format!("{}-{}-{}.tar.gz", pkg.name(), version, target);
-        let url = format!("https://github.com/{}/releases/download/{}/{}", repo, version, file);
-        let hash = "#SHA256 HASH PLACEHOLDER#".to_string();
+        // Skip the target if it is not the same as the current target.
+        if target.ne(target_triple::TARGET) {
+            eprintln!("Skipping target: {} of package: {}", target, bin_name);
+            continue;
+        }
+
+        let archive_name = format!("{}-{}-{}.tar.gz", bin_name, version, target);
+
+        let archive_path = output_dir.join(&archive_name);
+        if !archive_path.exists() {
+            panic!("Archive not found: {}", archive_path.display());
+        }
+
+        let url = if args.local {
+            let archive_path = archive_path
+                .canonicalize()
+                .unwrap_or_else(|_| panic!("Failed to canonicalize: {}", archive_path.display()));
+            format!("file://{}", archive_path.display())
+        } else {
+            format!(
+                "https://{}/releases/download/{}/{}",
+                HUMMANTA_GITHUB_REPO, version, archive_name
+            )
+        };
+
+        let checksum_path = output_dir.join(format!("{}.sha256", archive_name));
+        let hash = fs::read_to_string(&checksum_path).unwrap_or_else(|_| {
+            panic!("Failed to read SHA256 from file: {}", checksum_path.display())
+        });
+
         targets.insert(target.to_string(), TargetInfo::new(url, hash));
     }
 
-    targets
-}
-
-/// Get the output directory
-fn output_dir() -> PathBuf {
-    let profile = env::var("CARGO_CFG_PROFILE").unwrap_or_else(|_| "debug".to_string());
-    let target_dir = env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".to_string());
-
-    Path::new(&target_dir).join(profile)
-}
-
-/// Calculate the SHA256 hash of a file
-async fn calculate_sha256(path: impl AsRef<Path>) -> Result<String, Box<dyn std::error::Error>> {
-    let mut file = File::open(path).await?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0; 4096];
-
-    while let Ok(bytes_read) = file.read(&mut buffer).await {
-        if bytes_read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..bytes_read]);
-    }
-
-    let result = hasher.finalize();
-    Ok(format!("{:x}", result))
+    ReleaseToolchain::new(version, targets)
 }
