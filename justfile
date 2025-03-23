@@ -33,7 +33,7 @@ check:
 # Generate the manifests
 manifest local="true" profile="dev" target="" version="":
     cargo run \
-        --package hummanta-manifest-generator -- --path manifests \
+        --package hummanta-manifest -- --path manifests \
         --profile={{profile}} --target={{target}} --version={{version}} \
         {{ if local == "true" { "--local" } else { "" } }}
 
