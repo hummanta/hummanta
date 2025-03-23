@@ -3,8 +3,9 @@ default:
     just --list
 
 # Build the project
-build options="":
-    RUST_BACKTRACE=1 cargo build {{options}} --workspace --all-features --tests --bins --benches
+build profile="dev" target="":
+    RUST_BACKTRACE=1 cargo build --workspace --all-features --tests --bins --benches \
+        --profile {{profile}} {{ if target != "" { "--target " + target } else { "" } }}
 
 # Clean the build artifacts
 clean:
@@ -22,13 +23,28 @@ fmt:
 test:
     RUST_BACKTRACE=1 cargo test --workspace --all-features --verbose
 
+# Run all the checks
+check:
+    just clean
+    just fmt
+    just clippy
+    just test
+
 # Generate the manifests
-manifest local="true" options="": (build options)
-    cargo run {{options}} \
-        --package hummanta-manifest-generator -- \
-        --path manifests {{ if local == "true" { "--local" } else { "" } }}
+manifest local="true" profile="dev" target="" version="":
+    cargo run \
+        --package hummanta-manifest-generator -- --path manifests \
+        --profile={{profile}} --target={{target}} --version={{version}} \
+        {{ if local == "true" { "--local" } else { "" } }}
 
 # Package executables and generate checksums
-package target="" version="" profile="":
+package profile="dev" target="" version="":
     cargo run --package hummanta-packager -- \
-        --target={{target}} --version={{version}} --profile={{profile}}
+        --profile={{profile}} --target={{target}} --version={{version}}
+
+# Release the project in the local environment
+release local="true" profile="dev" target="" version="":
+    just clean
+    just build {{profile}} {{target}}
+    just package {{profile}} {{target}} {{version}}
+    just manifest {{local}} {{profile}} {{target}} {{version}}

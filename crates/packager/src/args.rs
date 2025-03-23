@@ -21,20 +21,32 @@ use clap::Parser;
 
 #[derive(Debug, Parser)]
 pub struct Arguments {
+    /// The profile to build with (e.g., release)
+    #[arg(long = "profile")]
+    profile: String,
+
     /// The target triple (e.g., x86_64-unknown-linux-gnu)
-    #[arg(short = 't', long = "target")]
+    #[arg(long = "target")]
     target: String,
 
     /// The version of the package (e.g., v0.1.1)
-    #[arg(short = 'v', long = "version")]
+    #[arg(long = "version")]
     version: String,
-
-    /// The profile to build with (e.g., release)
-    #[arg(short = 'p', long = "profile")]
-    profile: String,
 }
 
 impl Arguments {
+    // Determine the profile, defaulting to "debug" if not set
+    pub fn profile(&self) -> String {
+        if self.profile.is_empty() {
+            env::var("CARGO_CFG_PROFILE").unwrap_or_else(|_| "debug".to_string())
+        } else {
+            self.profile
+                .eq("dev")
+                .then(|| "debug".to_string())
+                .unwrap_or_else(|| self.profile.clone())
+        }
+    }
+
     // Determine the target triple, defaulting to the system's target if not set
     pub fn target(&self) -> String {
         if self.target.is_empty() {
@@ -50,15 +62,6 @@ impl Arguments {
             format!("v{}", env!("CARGO_PKG_VERSION"))
         } else {
             self.version.clone()
-        }
-    }
-
-    // Determine the profile, defaulting to "debug" if not set
-    pub fn profile(&self) -> String {
-        if self.profile.is_empty() {
-            env::var("CARGO_CFG_PROFILE").unwrap_or_else(|_| "debug".to_string())
-        } else {
-            self.profile.clone()
         }
     }
 
