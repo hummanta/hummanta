@@ -22,7 +22,7 @@ use tokio::{
 };
 
 /// Generate SHA256 checksum of a file and write it to an output file
-pub async fn checksum(file: &Path, output: &Path) -> Result<()> {
+pub async fn checksum(file: &Path, output_path: &Path) -> Result<()> {
     // Open the file for reading
     let mut hasher = Sha256::new();
     let file = fs::File::open(file)
@@ -43,9 +43,9 @@ pub async fn checksum(file: &Path, output: &Path) -> Result<()> {
     let checksum = format!("{:x}", hasher.finalize());
 
     // Create the checksum file
-    let mut checksum_file = fs::File::create(output)
+    let mut checksum_file = fs::File::create(output_path)
         .await
-        .context(format!("Failed to create checksum file: {:?}", output))?;
+        .context(format!("Failed to create checksum file: {:?}", output_path))?;
 
     // Write the checksum to the file
     checksum_file.write_all(checksum.as_bytes()).await.context("Failed to write checksum")?;

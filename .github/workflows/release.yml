@@ -30,8 +30,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install Rust
         run: rustup update stable
@@ -40,9 +38,6 @@ jobs:
         uses: taiki-e/setup-cross-toolchain-action@v1
         with:
           target: ${{ matrix.target }}
-
-      - name: Setup caches
-        uses: Swatinem/rust-cache@v2
 
       - name: Install Just
         uses: taiki-e/install-action@just
@@ -56,10 +51,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/release/*.tar.gz
-            target/${{ matrix.target }}/release/*.sha256
+          name: ${{ matrix.target }}
+          path: target/artifacts/*.tar.gz*
           compression-level: 0
 
   release:
@@ -69,11 +62,11 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: target/artifacts
           merge-multiple: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.tar.gz*
+          files: target/artifacts/*.tar.gz*
           fail_on_unmatched_files: true

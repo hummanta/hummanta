@@ -65,8 +65,8 @@ impl Arguments {
         }
     }
 
-    // Get the output directory based on the target and profile
-    pub fn output_dir(&self) -> PathBuf {
+    // Get the target directory based on the target and profile
+    pub fn target_dir(&self) -> PathBuf {
         let target = self.target();
         let profile = self.profile();
 
@@ -78,6 +78,11 @@ impl Arguments {
         };
 
         output_dir
+    }
+
+    pub fn output_dir(&self) -> PathBuf {
+        let target_dir = env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".to_string());
+        Path::new(&target_dir).join("artifacts")
     }
 }
 
@@ -144,7 +149,7 @@ mod tests {
             profile: "release".to_string(),
         };
         assert_eq!(
-            args.output_dir(),
+            args.target_dir(),
             Path::new("target").join("x86_64-unknown-linux-gnu").join("release")
         );
     }
@@ -156,6 +161,6 @@ mod tests {
             version: "".to_string(),
             profile: "debug".to_string(),
         };
-        assert_eq!(args.output_dir(), Path::new("target").join("debug"));
+        assert_eq!(args.target_dir(), Path::new("target").join("debug"));
     }
 }

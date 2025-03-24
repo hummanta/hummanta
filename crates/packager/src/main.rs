@@ -20,6 +20,7 @@ mod utils;
 
 use anyhow::Result;
 use clap::Parser;
+use std::fs;
 
 use self::{args::Arguments, package::package};
 
@@ -27,20 +28,26 @@ use self::{args::Arguments, package::package};
 async fn main() -> Result<()> {
     let args = Arguments::parse();
 
-    // prepare the output directory
-    let output_dir = args.output_dir();
-    if !output_dir.exists() {
-        eprintln!("Error: output directory {:?} does not exist.", output_dir);
+    // prepare the bin directory
+    let input_path = args.target_dir();
+    if !input_path.exists() {
+        eprintln!("Error: input directory {:?} does not exist.", input_path);
         std::process::exit(1);
+    }
+
+    // prepare the output directory
+    let output_path = args.output_dir();
+    if !output_path.exists() {
+        fs::create_dir_all(&output_path).expect("Failed to create output directory");
     }
 
     let target = args.target();
     let version = args.version();
 
-    println!("Creating archives and checksums for executables in {:?}:\n", output_dir);
+    println!("Creating archives and checksums for executables in {:?}:\n", input_path);
 
     // Call the package function to handle processing
-    if let Err(e) = package(&output_dir, &version, &target).await {
+    if let Err(e) = package(&input_path, &output_path, &target, &version).await {
         eprintln!("Error: Failed to package files: {}", e);
         std::process::exit(1);
     }
