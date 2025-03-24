@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod archive;
 mod args;
 mod index;
 mod toolchain;
@@ -50,6 +51,13 @@ async fn main() {
     toolchain::generate(&input_path, &artifact_path, &output_path, &args).await;
 
     // Archive all the manifests
+    let archive_input_path = artifact_path.join("manifests");
+    let archive_name = format!("manifests-{}.tar.gz", args.version());
+    let archive_output_path = artifact_path.join(archive_name);
+
+    archive::archive(&archive_input_path, &archive_output_path)
+        .await
+        .unwrap_or_else(|_| panic!("Failed to create archive for {:?}", archive_output_path));
 
     println!("Done!");
 }

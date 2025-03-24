@@ -8,9 +8,12 @@ name = "hummanta-manifest-generator"
 path = "bin/main.rs"
 
 [dependencies]
+anyhow.workspace = true
 clap.workspace = true
+flate2.workspace = true
 serde.workspace = true
 sha2.workspace = true
+tar.workspace = true
 target-triple.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["fs", "io-util", "macros", "rt-multi-thread"] }
