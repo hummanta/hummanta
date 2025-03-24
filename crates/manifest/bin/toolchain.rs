@@ -23,7 +23,12 @@ const TOOLCHAINS_DIR_NAME: &str = "toolchains";
 const CHECKSUM_FILE_SUFFIX: &str = ".sha256";
 
 /// process the toolchain manifests
-pub async fn generate(input_path: &Path, output_path: &Path, args: &Arguments) {
+pub async fn generate(
+    input_path: &Path,
+    artifact_path: &Path,
+    output_path: &Path,
+    args: &Arguments,
+) {
     // Prepare the input, output and index paths.
     let input_path = input_path.join(TOOLCHAINS_DIR_NAME);
     if !input_path.exists() {
@@ -47,7 +52,7 @@ pub async fn generate(input_path: &Path, output_path: &Path, args: &Arguments) {
     // toolchain file, parse it into a ToolchainManifest struct, and write
     // the serialized struct to the output path.
     for (_, path) in manifest.iter() {
-        process(&input_path.join(path), &output_path.join(path), args).await;
+        process(&input_path.join(path), artifact_path, &output_path.join(path), args).await;
     }
 
     // Copy the index.toml file to the output directory.
@@ -55,7 +60,7 @@ pub async fn generate(input_path: &Path, output_path: &Path, args: &Arguments) {
 }
 
 /// Process the toolchain manifest
-async fn process(input_path: &Path, output_path: &Path, args: &Arguments) {
+async fn process(input_path: &Path, artifact_path: &Path, output_path: &Path, args: &Arguments) {
     let manifest = ToolchainManifest::read(input_path)
         .unwrap_or_else(|_| panic!("Failed to parse TOML at {}", input_path.display()));
 
@@ -66,7 +71,7 @@ async fn process(input_path: &Path, output_path: &Path, args: &Arguments) {
     for (category, tools) in manifest.iter() {
         for (name, toolchain) in tools {
             if let Toolchain::Package(package) = toolchain {
-                let release = build(package, args).await;
+                let release = build(package, artifact_path, args).await;
                 println!(
                     "Generated manifests for package: {name} with targets: {:?}",
                     &release.targets.keys()
@@ -83,24 +88,19 @@ async fn process(input_path: &Path, output_path: &Path, args: &Arguments) {
 }
 
 /// Build the release toolchain
-async fn build(pkg: &PackageToolchain, args: &Arguments) -> ReleaseToolchain {
-    let mut targets = HashMap::new();
-    let output_path = args.output_dir();
+async fn build(pkg: &PackageToolchain, artifact_path: &Path, args: &Arguments) -> ReleaseToolchain {
     let version = args.version();
     let bin_name = pkg.name();
 
-    for target in &pkg.targets {
-        // Skip the target if it is not the same as the current target.
-        if target.ne(target_triple::TARGET) {
-            eprintln!("Skipping target: {} of package: {}", target, bin_name);
-            continue;
-        }
+    let mut targets = HashMap::new();
 
+    for target in &pkg.targets {
         let archive_name = format!("{}-{}-{}.tar.gz", bin_name, version, target);
 
-        let archive_path = output_path.join(&archive_name);
+        let archive_path = artifact_path.join(&archive_name);
         if !archive_path.exists() {
-            panic!("Archive not found: {}", archive_path.display());
+            eprintln!("Archive not found: {}, skipped", archive_path.display());
+            continue;
         }
 
         let url = if args.local {
@@ -116,7 +116,7 @@ async fn build(pkg: &PackageToolchain, args: &Arguments) -> ReleaseToolchain {
         };
 
         let checksum_file = format!("{}{}", archive_name, CHECKSUM_FILE_SUFFIX);
-        let checksum_path = output_path.join(checksum_file);
+        let checksum_path = artifact_path.join(checksum_file);
         let hash = fs::read_to_string(&checksum_path).unwrap_or_else(|_| {
             panic!("Failed to read SHA256 from file: {}", checksum_path.display())
         });

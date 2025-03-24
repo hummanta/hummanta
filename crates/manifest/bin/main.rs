@@ -32,22 +32,24 @@ async fn main() {
         std::process::exit(1);
     }
 
-    // Prepare the target output directory
-    let target_path = args.output_dir();
-    if !target_path.exists() {
-        eprintln!("Error: target directory {:?} does not exist.", target_path);
+    // Prepare the artifacts directory
+    let artifact_path = args.artifact_dir();
+    if !artifact_path.exists() {
+        eprintln!("Error: artifacts directory {:?} does not exist.", artifact_path);
         std::process::exit(1);
     }
 
     // Prepare the manifest output directory
-    let output_path = target_path.join("manifests");
+    let output_path = artifact_path.join("manifests");
     if !output_path.exists() {
-        fs::create_dir_all(&target_path).expect("Failed to create output directory for manifests");
+        fs::create_dir_all(&output_path).expect("Failed to create output directory for manifests");
     }
 
     // Call the toolchain generate function to handle processing.
     println!("Generating manifests of toolchains");
-    toolchain::generate(&input_path, &output_path, &args).await;
+    toolchain::generate(&input_path, &artifact_path, &output_path, &args).await;
+
+    // Archive all the manifests
 
     println!("Done!");
 }

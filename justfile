@@ -31,10 +31,9 @@ check:
     just test
 
 # Generate the manifests
-manifest local="true" profile="dev" target="" version="":
-    cargo run \
-        --package hummanta-manifest -- --path manifests \
-        --profile={{profile}} --target={{target}} --version={{version}} \
+manifest local="true" version="":
+    cargo run --package hummanta-manifest -- \
+        --path manifests --version={{version}} \
         {{ if local == "true" { "--local" } else { "" } }}
 
 # Package executables and generate checksums
@@ -47,4 +46,4 @@ release local="true" profile="dev" target="" version="":
     just clean
     just build {{profile}} {{target}}
     just package {{profile}} {{target}} {{version}}
-    just manifest {{local}} {{profile}} {{target}} {{version}}
+    just manifest {{local}} {{version}}
