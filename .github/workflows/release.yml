@@ -12,51 +12,68 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: taiki-e/create-gh-release-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  upload-assets:
-    name: Upload Assets
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            platform: linux-amd64
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            platform: linux-arm64
           - os: macos-latest
             target: x86_64-apple-darwin
-            platform: darwin-amd64
           - os: macos-latest
             target: aarch64-apple-darwin
-            platform: darwin-arm64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            platform: windows-amd64
-#         - os: windows-latest
-#           target: aarch64-pc-windows-msvc
-#           platform: windows-arm64
     steps:
-    - uses: actions/checkout@v4
-    - name: Install cross-compilation tools
-      uses: taiki-e/setup-cross-toolchain-action@v1
-      with:
-        target: ${{ matrix.target }}
-    - uses: taiki-e/upload-rust-binary-action@v1
-      with:
-        bin: hummanta
-        archive: $bin-${{ matrix.platform }}
-        target: ${{ matrix.target }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-        include: LICENSE,README.md
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        run: rustup update stable
+
+      - name: Install cross-compilation tools
+        uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Setup caches
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Just
+        uses: taiki-e/install-action@just
+
+      - name: Build all crates
+        run: just build release ${{ matrix.target }}
+
+      - name: Package binaries and checksum
+        run: just package release ${{ matrix.target }} ${{ github.ref_name }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/*.tar.gz
+            target/${{ matrix.target }}/release/*.sha256
+          compression-level: 0
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.tar.gz*
+          fail_on_unmatched_files: true
