@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Arc;
+use std::{fs, sync::Arc};
 
 use crate::{context::Context, errors::Result};
+use anyhow::Context as _;
 use clap::Args;
 
 /// Lists all toolchains
@@ -23,6 +24,36 @@ pub struct Command {}
 
 impl Command {
     pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+        let toolchains_dir =
+            dirs::home_dir().context("Failed to get home directory")?.join(".hummanta/toolchains");
+
+        let mut pairs = Vec::new();
+
+        for version_entry in fs::read_dir(&toolchains_dir)? {
+            let version_entry = version_entry?;
+            if !version_entry.path().is_dir() {
+                continue;
+            }
+
+            for toolchain_entry in fs::read_dir(version_entry.path())? {
+                let toolchain_entry = toolchain_entry?;
+                if !toolchain_entry.path().is_dir() {
+                    continue;
+                }
+
+                pairs.push((
+                    toolchain_entry.path().file_name().unwrap().to_str().unwrap().to_string(),
+                    version_entry.path().file_name().unwrap().to_str().unwrap().to_string(),
+                ));
+            }
+        }
+
+        pairs.sort_by(|a, b| a.0.cmp(&b.0));
+
+        for (toolchain, version) in pairs {
+            println!("{} ({})", toolchain, version);
+        }
+
+        Ok(())
     }
 }

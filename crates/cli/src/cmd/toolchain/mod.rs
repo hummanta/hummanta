@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! layout:
+//! ~/.hummanta
+//! └── toolchains
+//!     └── v0.2.1-x86_64-apple-darwin
+//!         └── solidity
+
 mod add;
 mod list;
 mod remove;

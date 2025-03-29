@@ -14,7 +14,8 @@
 
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Errors>;
+// pub type Result<T> = std::result::Result<T, Errors>;
+pub use anyhow::Result;
 
 #[derive(Debug, Error)]
 pub enum Errors {}
