@@ -126,3 +126,119 @@ async fn build(pkg: &PackageToolchain, artifact_path: &Path, args: &Arguments) -
 
     ReleaseToolchain::new(version, targets)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs::{self, File},
+        io::Write,
+        path::PathBuf,
+    };
+    use tempfile::tempdir;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_generate_with_valid_input() {
+        let temp_dir = tempdir().unwrap();
+        let input_path = temp_dir.path().join("input");
+        let artifact_path = temp_dir.path().join("artifacts");
+        let output_path = temp_dir.path().join("output");
+
+        // Create necessary directories and files
+        fs::create_dir_all(input_path.join(TOOLCHAINS_DIR_NAME)).unwrap();
+        fs::create_dir_all(&artifact_path).unwrap();
+        fs::create_dir_all(&output_path).unwrap();
+
+        let index_manifest_path = input_path.join(TOOLCHAINS_DIR_NAME).join(INDEX_MANIFEST_NAME);
+        let mut index_file = File::create(&index_manifest_path).unwrap();
+        writeln!(index_file, "example = \"example.toml\"").unwrap();
+
+        let toolchain_manifest_path = input_path.join(TOOLCHAINS_DIR_NAME).join("example.toml");
+        let mut toolchain_file = File::create(&toolchain_manifest_path).unwrap();
+        writeln!(
+            toolchain_file,
+            "[category.example]\npackage = \"example\"\ntargets = [\"x86_64-unknown-linux-gnu\"]"
+        )
+        .unwrap();
+
+        let args =
+            Arguments { path: input_path.clone(), local: false, version: "v1.0.0".to_string() };
+
+        generate(&input_path, &artifact_path, &output_path, &args).await;
+
+        assert!(output_path.join(TOOLCHAINS_DIR_NAME).exists());
+        assert!(output_path.join(TOOLCHAINS_DIR_NAME).join(INDEX_MANIFEST_NAME).exists());
+    }
+
+    #[tokio::test]
+    async fn test_process_with_invalid_toolchain_manifest() {
+        let temp_dir = tempdir().unwrap();
+        let input_path = temp_dir.path().join("invalid_toolchain.toml");
+        let artifact_path = temp_dir.path();
+        let output_path = temp_dir.path().join("output");
+        let args =
+            Arguments { path: input_path.clone(), local: false, version: "v1.0.0".to_string() };
+
+        let mut file = File::create(&input_path).unwrap();
+        writeln!(file, "invalid_toml_content").unwrap();
+
+        let result = std::panic::catch_unwind(|| {
+            tokio::runtime::Runtime::new().unwrap().block_on(process(
+                &input_path,
+                artifact_path,
+                &output_path,
+                &args,
+            ))
+        });
+
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_build_with_missing_archive() {
+        let temp_dir = tempdir().unwrap();
+        let artifact_path = temp_dir.path();
+        let args =
+            Arguments { path: PathBuf::from("."), local: false, version: "v1.0.0".to_string() };
+
+        let package = PackageToolchain {
+            package: "example".to_string(),
+            bin: None,
+            targets: vec!["x86_64-unknown-linux-gnu".to_string()],
+        };
+
+        let release = build(&package, artifact_path, &args).await;
+
+        assert!(release.targets.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_build_with_valid_archive() {
+        let temp_dir = tempdir().unwrap();
+        let artifact_path = temp_dir.path();
+        let args =
+            Arguments { path: PathBuf::from("."), local: false, version: "v1.0.0".to_string() };
+
+        let archive_name = "example-v1.0.0-x86_64-unknown-linux-gnu.tar.gz";
+        let checksum_name = format!("{}.sha256", archive_name);
+
+        let archive_path = artifact_path.join(archive_name);
+        let checksum_path = artifact_path.join(&checksum_name);
+
+        File::create(&archive_path).unwrap();
+        let mut checksum_file = File::create(&checksum_path).unwrap();
+        writeln!(checksum_file, "dummy_checksum").unwrap();
+
+        let package = PackageToolchain {
+            package: "example".to_string(),
+            bin: None,
+            targets: vec!["x86_64-unknown-linux-gnu".to_string()],
+        };
+
+        let release = build(&package, artifact_path, &args).await;
+
+        assert_eq!(release.targets.len(), 1);
+        assert!(release.targets.contains_key("x86_64-unknown-linux-gnu"));
+    }
+}

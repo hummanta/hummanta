@@ -22,3 +22,58 @@ pub fn generate(input_path: &Path, output_path: &Path) {
         panic!("Failed to copy {} to {}", input_path.display(), output_path.display())
     });
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs::{self, File},
+        io::Write,
+    };
+    use tempfile::tempdir;
+
+    use super::*;
+
+    #[test]
+    fn test_generate_success() {
+        let temp_dir = tempdir().unwrap();
+        let input_file_path = temp_dir.path().join("input.txt");
+        let output_file_path = temp_dir.path().join("output.txt");
+
+        // Create a sample input file
+        let mut input_file = File::create(&input_file_path).unwrap();
+        writeln!(input_file, "Hello, world!").unwrap();
+
+        // Call the generate function
+        generate(&input_file_path, &output_file_path);
+
+        // Verify the output file exists and has the same content
+        let output_content = fs::read_to_string(output_file_path).unwrap();
+        assert_eq!(output_content, "Hello, world!\n");
+    }
+
+    #[test]
+    #[should_panic(expected = "Failed to copy")]
+    fn test_generate_input_file_missing() {
+        let temp_dir = tempdir().unwrap();
+        let input_file_path = temp_dir.path().join("nonexistent.txt");
+        let output_file_path = temp_dir.path().join("output.txt");
+
+        // Call the generate function with a missing input file
+        generate(&input_file_path, &output_file_path);
+    }
+
+    #[test]
+    #[should_panic(expected = "Failed to copy")]
+    fn test_generate_output_path_invalid() {
+        let temp_dir = tempdir().unwrap();
+        let input_file_path = temp_dir.path().join("input.txt");
+
+        // Create a sample input file
+        let mut input_file = File::create(&input_file_path).unwrap();
+        writeln!(input_file, "Hello, world!").unwrap();
+
+        // Call the generate function with an invalid output path
+        let invalid_output_path = temp_dir.path().join("nonexistent_dir/output.txt");
+        generate(&input_file_path, &invalid_output_path);
+    }
+}

@@ -31,7 +31,7 @@ pub struct Arguments {
 
     /// The version of the package (e.g., v0.1.1)
     #[arg(long = "version")]
-    version: String,
+    pub version: String,
 }
 
 impl Arguments {
