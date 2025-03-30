@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::{fs, path::PathBuf, sync::Arc};
 
 use anyhow::Context as _;
 use clap::Args;
@@ -29,9 +25,13 @@ pub struct Command {
     /// The language to remove the toolchain for.
     language: String,
 
-    /// Specific version to remove (removes all versions if not specified)
+    /// Specific version to remove (default: current active version)
     #[arg(short, long)]
     version: Option<String>,
+
+    /// Remove all versions of this toolchain
+    #[arg(short, long)]
+    all: bool,
 
     /// Skip confirmation prompt
     #[arg(short, long)]
@@ -39,12 +39,20 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
+    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         let toolchains_dir =
-            dirs::home_dir().context("Failed to get home directory")?.join(".hummanta/toolchains");
+            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
 
-        // Find matching toolchains to remove
-        let toolchains = find_remove_toolchains(&toolchains_dir, &self.language, &self.version)?;
+        let versions = self.resolve_versions(&ctx)?;
+        let mut toolchains = Vec::new();
+
+        // Finds all toolchain directories matching the removal criteria
+        for version in versions {
+            let toolchain_path = toolchains_dir.join(&version).join(&self.language);
+            if toolchain_path.exists() {
+                toolchains.push((version, toolchain_path));
+            }
+        }
 
         if toolchains.is_empty() {
             println!("No matching toolchains found to remove");
@@ -52,81 +60,69 @@ impl Command {
         }
 
         // Confirm removal with user (unless force flag is set)
-        if !confirm_removal(&toolchains, self.force)? {
-            println!("Aborted");
+        if !self.confirm_removal(&toolchains)? {
+            println!("Removal cancelled");
             return Ok(());
         }
 
         // Execute the removal
-        remove_toolchains(toolchains)
+        self.remove_toolchains(&toolchains)
     }
-}
 
-/// Finds all toolchain directories matching the removal criteria
-fn find_remove_toolchains(
-    base_dir: &Path,
-    language: &str,
-    version: &Option<String>,
-) -> Result<Vec<PathBuf>> {
-    let mut toolchains = Vec::new();
+    fn resolve_versions(&self, ctx: &Context) -> Result<Vec<String>> {
+        match (&self.version, self.all) {
+            (Some(ver), _) => Ok(vec![ver.clone()]),
+            (None, true) => self.find_all_versions(ctx),
+            (None, false) => Ok(vec![ctx.version()]),
+        }
+    }
 
-    for version_entry in fs::read_dir(base_dir)? {
-        let version_entry = version_entry?;
-        let version_path = version_entry.path();
+    fn find_all_versions(&self, ctx: &Context) -> Result<Vec<String>> {
+        let toolchains_dir =
+            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
 
-        // Filter by version if specified
-        if let Some(ver) = version {
-            if !version_path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .map(|n| n.contains(ver))
-                .unwrap_or(false)
-            {
-                continue;
+        let mut versions = Vec::new();
+        for entry in fs::read_dir(toolchains_dir)? {
+            let path = entry?.path();
+            if let Some(name) = path.file_name() {
+                versions.push(name.to_string_lossy().into_owned());
             }
         }
+        Ok(versions)
+    }
 
-        // Check if language directory exists
-        let toolchain_path = version_path.join(language);
-        if toolchain_path.exists() && toolchain_path.is_dir() {
-            toolchains.push(toolchain_path);
+    /// Prompts user for confirmation before removal
+    fn confirm_removal(&self, targets: &[(String, PathBuf)]) -> Result<bool> {
+        println!("The following toolchains will be removed:");
+        for (version, path) in targets {
+            println!("- {} (version: {})", path.display(), version);
         }
+
+        if !self.force {
+            println!("Are you sure you want to continue? [y/N]");
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            return Ok(input.trim().eq_ignore_ascii_case("y"));
+        }
+
+        Ok(true)
     }
 
-    Ok(toolchains)
-}
+    /// Performs the actual directory removal
+    fn remove_toolchains(&self, targets: &[(String, PathBuf)]) -> Result<()> {
+        for (version, path) in targets {
+            if path.exists() {
+                fs::remove_dir_all(path)?;
+                println!("Removed: {} (version: {})", path.display(), version);
 
-/// Prompts user for confirmation before removal
-fn confirm_removal(targets: &[PathBuf], force: bool) -> Result<bool> {
-    println!("The following toolchains will be removed:");
-    for path in targets {
-        println!("- {}", path.display());
-    }
-
-    if !force {
-        println!("Are you sure you want to continue? [y/N]");
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input)?;
-        return Ok(input.trim().eq_ignore_ascii_case("y"));
-    }
-
-    Ok(true)
-}
-
-/// Performs the actual directory removal
-fn remove_toolchains(targets: Vec<PathBuf>) -> Result<()> {
-    for path in targets {
-        if path.exists() {
-            fs::remove_dir_all(&path)?;
-            println!("Removed: {}", path.display());
-
-            // Clean up empty version directories
-            if let Some(parent) = path.parent() {
-                if fs::read_dir(parent)?.next().is_none() {
-                    fs::remove_dir(parent)?;
+                // Clean up empty version directories
+                if let Some(parent) = path.parent() {
+                    if fs::read_dir(parent)?.next().is_none() {
+                        fs::remove_dir(parent)?;
+                    }
                 }
             }
         }
+        Ok(())
     }
-    Ok(())
 }

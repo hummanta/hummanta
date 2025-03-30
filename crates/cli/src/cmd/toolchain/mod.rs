@@ -14,8 +14,13 @@
 
 //! layout:
 //! ~/.hummanta
+//! └── manifests
+//! |    └── v0.2.1
+//! |        └── toolchains
+//! |            └── index.toml
+//! |            └── solidity.toml
 //! └── toolchains
-//!     └── v0.2.1-x86_64-apple-darwin
+//!     └── v0.2.1
 //!         └── solidity
 
 mod add;

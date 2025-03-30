@@ -23,9 +23,9 @@ use clap::Args;
 pub struct Command {}
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
+    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         let toolchains_dir =
-            dirs::home_dir().context("Failed to get home directory")?.join(".hummanta/toolchains");
+            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
 
         let mut pairs = Vec::new();
 
