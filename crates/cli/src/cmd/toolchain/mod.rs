@@ -12,6 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! layout:
+//! ~/.hummanta
+//! └── manifests
+//! |    └── v0.2.1
+//! |        └── toolchains
+//! |            └── index.toml
+//! |            └── solidity.toml
+//! └── toolchains
+//!     └── v0.2.1
+//!         └── solidity
+
 mod add;
 mod list;
 mod remove;

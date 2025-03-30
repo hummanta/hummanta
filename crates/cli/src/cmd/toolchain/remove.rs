@@ -12,20 +12,117 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Arc;
+use std::{fs, path::PathBuf, sync::Arc};
+
+use anyhow::Context as _;
+use clap::Args;
 
 use crate::{context::Context, errors::Result};
-use clap::Args;
 
 /// Removes the toolchain for the specified language.
 #[derive(Args, Debug)]
 pub struct Command {
     /// The language to remove the toolchain for.
     language: String,
+
+    /// Specific version to remove (default: current active version)
+    #[arg(short, long)]
+    version: Option<String>,
+
+    /// Remove all versions of this toolchain
+    #[arg(short, long)]
+    all: bool,
+
+    /// Skip confirmation prompt
+    #[arg(short, long)]
+    force: bool,
 }
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        let toolchains_dir =
+            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
+
+        let versions = self.resolve_versions(&ctx)?;
+        let mut toolchains = Vec::new();
+
+        // Finds all toolchain directories matching the removal criteria
+        for version in versions {
+            let toolchain_path = toolchains_dir.join(&version).join(&self.language);
+            if toolchain_path.exists() {
+                toolchains.push((version, toolchain_path));
+            }
+        }
+
+        if toolchains.is_empty() {
+            println!("No matching toolchains found to remove");
+            return Ok(());
+        }
+
+        // Confirm removal with user (unless force flag is set)
+        if !self.confirm_removal(&toolchains)? {
+            println!("Removal cancelled");
+            return Ok(());
+        }
+
+        // Execute the removal
+        self.remove_toolchains(&toolchains)
+    }
+
+    fn resolve_versions(&self, ctx: &Context) -> Result<Vec<String>> {
+        match (&self.version, self.all) {
+            (Some(ver), _) => Ok(vec![ver.clone()]),
+            (None, true) => self.find_all_versions(ctx),
+            (None, false) => Ok(vec![ctx.version()]),
+        }
+    }
+
+    fn find_all_versions(&self, ctx: &Context) -> Result<Vec<String>> {
+        let toolchains_dir =
+            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
+
+        let mut versions = Vec::new();
+        for entry in fs::read_dir(toolchains_dir)? {
+            let path = entry?.path();
+            if let Some(name) = path.file_name() {
+                versions.push(name.to_string_lossy().into_owned());
+            }
+        }
+        Ok(versions)
+    }
+
+    /// Prompts user for confirmation before removal
+    fn confirm_removal(&self, targets: &[(String, PathBuf)]) -> Result<bool> {
+        println!("The following toolchains will be removed:");
+        for (version, path) in targets {
+            println!("- {} (version: {})", path.display(), version);
+        }
+
+        if !self.force {
+            println!("Are you sure you want to continue? [y/N]");
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            return Ok(input.trim().eq_ignore_ascii_case("y"));
+        }
+
+        Ok(true)
+    }
+
+    /// Performs the actual directory removal
+    fn remove_toolchains(&self, targets: &[(String, PathBuf)]) -> Result<()> {
+        for (version, path) in targets {
+            if path.exists() {
+                fs::remove_dir_all(path)?;
+                println!("Removed: {} (version: {})", path.display(), version);
+
+                // Clean up empty version directories
+                if let Some(parent) = path.parent() {
+                    if fs::read_dir(parent)?.next().is_none() {
+                        fs::remove_dir(parent)?;
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 }

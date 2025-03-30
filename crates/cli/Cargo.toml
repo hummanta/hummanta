@@ -8,8 +8,11 @@ name = "hummanta"
 path = "src/main.rs"
 
 [dependencies]
+hummanta-manifest.workspace = true
+
 anyhow.workspace = true
 clap.workspace = true
 thiserror.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
+dirs.workspace = true
