@@ -33,4 +33,9 @@ impl Context {
     pub fn toolchains_dir(&self) -> Option<PathBuf> {
         self.home_dir().map(|dir| dir.join("toolchains"))
     }
+
+    /// Gets the path to the manifests directory.
+    pub fn manifests_dir(&self) -> Option<PathBuf> {
+        self.home_dir().map(|dir| dir.join("manifests"))
+    }
 }

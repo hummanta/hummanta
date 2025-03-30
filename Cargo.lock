@@ -322,6 +322,7 @@ dependencies = [
  "anyhow",
  "clap",
  "dirs",
+ "hummanta-manifest",
  "thiserror",
  "tracing",
  "tracing-subscriber",
