@@ -91,8 +91,20 @@ impl ToolchainManifest {
         self.0.get(category).is_some_and(|map| map.contains_key(name))
     }
 
+    /// Returns an iterator over the entries in the toolchain manifest.
+    ///
+    /// This iterator yields tuples where the first element is the category name
+    /// and the second element is a reference to the corresponding map of toolchains.
     pub fn iter(&self) -> impl Iterator<Item = (&String, &HashMap<String, Toolchain>)> {
         self.0.iter()
+    }
+
+    /// Returns an iterator over the toolchains in the manifest.
+    ///
+    /// This iterator yields references to the maps of toolchains, where each map
+    /// corresponds to a category of toolchains.
+    pub fn values(&self) -> impl Iterator<Item = &HashMap<String, Toolchain>> {
+        self.0.values()
     }
 }
 
@@ -300,5 +312,46 @@ mod tests {
 
         assert_eq!(target_info.url, "http://example.com");
         assert_eq!(target_info.hash, "hash123");
+    }
+
+    #[test]
+    fn test_iter_toolchain() {
+        let mut manifest = ToolchainManifest::new();
+        let toolchain = Toolchain::Package(PackageToolchain::new(
+            "package1".to_string(),
+            Some("bin1".to_string()),
+            vec!["x86_64-unknown-linux-gnu".to_string()],
+        ));
+        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain);
+
+        let mut iter = manifest.iter();
+        assert!(iter.next().is_some());
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn test_values_toolchain() {
+        let mut manifest = ToolchainManifest::new();
+        let toolchain1 = Toolchain::Package(PackageToolchain::new(
+            "package1".to_string(),
+            Some("bin1".to_string()),
+            vec!["x86_64-unknown-linux-gnu".to_string()],
+        ));
+        let toolchain2 = Toolchain::Release(ReleaseToolchain::new(
+            "v1.0.0".to_string(),
+            HashMap::from([(
+                "x86_64-unknown-linux-gnu".to_string(),
+                TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
+            )]),
+        ));
+
+        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain1);
+        manifest.insert("compiler".to_string(), "compiler1".to_string(), toolchain2);
+
+        let values: Vec<_> = manifest.values().collect();
+        assert_eq!(values.len(), 2);
+
+        assert!(values.iter().any(|map| map.contains_key("detector1")));
+        assert!(values.iter().any(|map| map.contains_key("compiler1")));
     }
 }

@@ -469,8 +469,13 @@ dependencies = [
  "anyhow",
  "clap",
  "dirs",
+ "flate2",
+ "hummanta-fetcher",
  "hummanta-manifest",
+ "tar",
+ "target-triple",
  "thiserror",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]

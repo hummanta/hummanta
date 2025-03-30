@@ -41,13 +41,13 @@ pub enum Commands {
 }
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
             Commands::Build(cmd) => cmd.exec(ctx),
             Commands::Compile(cmd) => cmd.exec(ctx),
             Commands::Init(cmd) => cmd.exec(ctx),
             Commands::Target(cmd) => cmd.exec(ctx),
-            Commands::Toolchain(cmd) => cmd.exec(ctx),
+            Commands::Toolchain(cmd) => cmd.exec(ctx).await,
         }
     }
 }

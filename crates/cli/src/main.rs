@@ -24,11 +24,12 @@ use context::Context;
 use errors::Result;
 use tracing::error;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let ctx = Arc::new(Context::default());
-    if let Err(err) = Command::parse().exec(ctx) {
+    if let Err(err) = Command::parse().exec(ctx).await {
         error!("{}", err);
         std::process::exit(1);
     }

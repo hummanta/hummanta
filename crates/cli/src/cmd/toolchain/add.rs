@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{fs, path::Path, sync::Arc};
+use std::{io::Cursor, path::Path, sync::Arc};
 
-use crate::{context::Context, errors::Result};
 use anyhow::Context as _;
 use clap::Args;
-use hummanta_manifest::ToolchainManifest;
+use flate2::read::GzDecoder;
+use tar::Archive;
+use tokio::fs;
+
+use hummanta_fetcher::FETCHER_FACTORY;
+use hummanta_manifest::{TargetInfo, Toolchain, ToolchainManifest};
+
+use crate::{context::Context, errors::Result};
 
 /// Installs the specified language's toolchain.
 #[derive(Args, Debug)]
@@ -27,7 +33,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         let version = ctx.version();
 
         // Load manifest for this language and version
@@ -53,14 +59,10 @@ impl Command {
             .context("Failed to get toolchains directory")?
             .join(&version)
             .join(&self.language);
+        fs::create_dir_all(&toolchain_dir).await.context("Failed to create toolchain directory")?;
 
-        fs::create_dir_all(&toolchain_dir).context("Failed to create toolchain directory")?;
-
-        let manifest = ToolchainManifest::read(manifest_path)
-            .context("Failed to read or parse toolchain manifest")?;
-
-        self.install_components(&manifest, &toolchain_dir)
-            .context("Failed to install toolchain components")?;
+        let manifest = ToolchainManifest::read(manifest_path)?;
+        self.installs(&manifest, &toolchain_dir).await?;
 
         println!(
             "Successfully installed {} toolchain (version: {}) at {}",
@@ -71,16 +73,52 @@ impl Command {
         Ok(())
     }
 
-    fn install_components(&self, _manifest: &ToolchainManifest, target_dir: &Path) -> Result<()> {
-        // Implementation would:
-        // 1. Download required components based on current platform
-        // 2. Verify checksums
-        // 3. Install to target_dir
-        // 4. Set executable permissions
+    async fn installs(&self, manifest: &ToolchainManifest, target_dir: &Path) -> Result<()> {
+        let current_target = target_triple::TARGET;
+        let mut handles = Vec::new();
 
-        // Placeholder implementation
+        manifest.values().for_each(|tools| {
+            tools
+                .iter()
+                .filter_map(|(name, toolchain)| match toolchain {
+                    Toolchain::Release(release) => Some((name, release)),
+                    _ => None,
+                })
+                .filter_map(|(name, release)| {
+                    release
+                        .get_target_info(current_target)
+                        .map(|target| (name.to_string(), target.clone()))
+                })
+                .for_each(|(name, target)| {
+                    let name = name.clone();
+                    let target = target.clone();
+                    let target_dir = target_dir.to_path_buf();
+                    handles.push(tokio::spawn(async move {
+                        install(&name, &target, &target_dir).await
+                    }));
+                });
+        });
 
-        println!("Installing components from manifest to {}", target_dir.display());
+        for handle in handles {
+            handle.await.context("Failed to join task")??;
+        }
+
         Ok(())
     }
+}
+
+async fn install(name: &str, target: &TargetInfo, target_dir: &Path) -> Result<()> {
+    // Fetch and verify the checksum
+    let data = FETCHER_FACTORY
+        .fetch(&target.url, &target.hash)
+        .await
+        .with_context(|| format!("Failed to fetch {}", name))?;
+
+    // Unpack the file and extract its contents to the target directory
+    let buffer = Cursor::new(data);
+    let decoder = GzDecoder::new(buffer);
+    let mut archive = Archive::new(decoder);
+    archive.unpack(target_dir).context("Failed to unpack tar.gz file")?;
+
+    Ok(())
 }
