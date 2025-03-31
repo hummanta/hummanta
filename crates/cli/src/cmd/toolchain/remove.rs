@@ -17,7 +17,7 @@ use std::{fs, path::PathBuf, sync::Arc};
 use anyhow::Context as _;
 use clap::Args;
 
-use crate::{context::Context, errors::Result};
+use crate::{context::Context, errors::Result, utils::confirm};
 
 /// Removes the toolchain for the specified language.
 #[derive(Args, Debug)]
@@ -59,8 +59,14 @@ impl Command {
             return Ok(());
         }
 
+        // Show removal preview
+        println!("The following toolchains will be removed:");
+        for (version, path) in &toolchains {
+            println!("- {} (version: {})", path.display(), version);
+        }
+
         // Confirm removal with user (unless force flag is set)
-        if !self.confirm_removal(&toolchains)? {
+        if !self.force && !confirm("Are you sure you want to continue? [y/N]")? {
             println!("Removal cancelled");
             return Ok(());
         }
@@ -89,23 +95,6 @@ impl Command {
             }
         }
         Ok(versions)
-    }
-
-    /// Prompts user for confirmation before removal
-    fn confirm_removal(&self, targets: &[(String, PathBuf)]) -> Result<bool> {
-        println!("The following toolchains will be removed:");
-        for (version, path) in targets {
-            println!("- {} (version: {})", path.display(), version);
-        }
-
-        if !self.force {
-            println!("Are you sure you want to continue? [y/N]");
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input)?;
-            return Ok(input.trim().eq_ignore_ascii_case("y"));
-        }
-
-        Ok(true)
     }
 
     /// Performs the actual directory removal

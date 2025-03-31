@@ -12,28 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod cmd;
-mod context;
-mod errors;
-mod utils;
+use crate::errors::Result;
 
-use std::sync::Arc;
+pub fn confirm(prompt: &str) -> Result<bool> {
+    println!("{prompt}");
 
-use clap::Parser;
-use cmd::Command;
-use context::Context;
-use errors::Result;
-use tracing::error;
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input)?;
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
-
-    let ctx = Arc::new(Context::default());
-    if let Err(err) = Command::parse().exec(ctx).await {
-        error!("{}", err);
-        std::process::exit(1);
-    }
-
-    Ok(())
+    Ok(input.trim().eq_ignore_ascii_case("y"))
 }
