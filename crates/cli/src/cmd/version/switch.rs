@@ -27,9 +27,6 @@ pub struct Command {
 impl Command {
     pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         let version = self.version.trim();
-        if !version.starts_with('v') {
-            anyhow::bail!("Version must start with 'v'");
-        }
 
         // Validate version exists
         let manifests_path = ctx.manifests_dir().join(version);

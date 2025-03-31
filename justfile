@@ -25,7 +25,6 @@ test:
 
 # Run all the checks
 check:
-    just clean
     just fmt
     just clippy
     just test
@@ -43,7 +42,19 @@ package profile="dev" target="" version="":
 
 # Release the project in the local environment
 release local="true" profile="dev" target="" version="":
-    just clean
     just build {{profile}} {{target}}
     just package {{profile}} {{target}} {{version}}
     just manifest {{local}} {{version}}
+
+# Link local development build as a version
+link:
+    mkdir -p ~/.hummanta/manifests/local
+    cp -r target/artifacts/manifests/* ~/.hummanta/manifests/local
+
+# Run all commend in the local environment
+all:
+    just check
+    just build dev
+    just package dev "" local
+    just manifest true local
+    just link

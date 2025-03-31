@@ -24,7 +24,6 @@
 //!         └── solidity
 
 mod add;
-mod link;
 mod list;
 mod remove;
 mod switch;
@@ -44,7 +43,6 @@ pub struct Command {
 #[derive(Subcommand, Debug)]
 enum Commands {
     Add(add::Command),
-    Link(link::Command),
     List(list::Command),
     Remove(remove::Command),
     Switch(switch::Command),
@@ -54,7 +52,6 @@ impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
             Commands::Add(cmd) => cmd.exec(ctx).await,
-            Commands::Link(cmd) => cmd.exec(ctx),
             Commands::List(cmd) => cmd.exec(ctx).await,
             Commands::Remove(cmd) => cmd.exec(ctx).await,
             Commands::Switch(cmd) => cmd.exec(ctx),
