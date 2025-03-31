@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use clap::Args;
 use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
-use clap::Args;
 
 /// Change active version
 #[derive(Args, Debug)]
@@ -25,7 +25,24 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        let version = self.version.trim();
+        if !version.starts_with('v') {
+            anyhow::bail!("Version must start with 'v'");
+        }
+
+        // Validate version exists
+        let manifests_path = ctx.manifests_dir().join(version);
+        if !manifests_path.exists() {
+            anyhow::bail!("Version {} is not installed (missing manifests)", version);
+        }
+
+        // Update config
+        let mut config = ctx.config.clone();
+        config.active_version = Some(version.to_string());
+        config.save(&ctx.config_path)?;
+
+        println!("Switched to version {}", version);
+        Ok(())
     }
 }

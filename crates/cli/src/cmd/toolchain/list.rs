@@ -49,7 +49,11 @@ impl Command {
         pairs.sort_by(|a, b| a.0.cmp(&b.0));
 
         for (toolchain, version) in pairs {
-            println!("{} ({})", toolchain, version);
+            if version == ctx.version() {
+                println!("* {} ({}) (active)", toolchain, version);
+            } else {
+                println!("  {} ({})", toolchain, version);
+            }
         }
 
         Ok(())
