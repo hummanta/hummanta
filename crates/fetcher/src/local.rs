@@ -12,20 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use async_trait::async_trait;
+use std::path::Path;
 
-use crate::{checksum, errors::FetchResult, Fetcher};
+use async_trait::async_trait;
+use tokio::fs;
+
+use crate::{
+    checksum::verify,
+    context::FetchContext,
+    errors::{FetchError, FetchResult},
+    traits::Fetcher,
+};
 
 /// Fetcher implementation for local file system
 pub struct LocalFetcher;
 
-#[async_trait]
-impl Fetcher for LocalFetcher {
-    async fn fetch(&self, url: &str, hash: &str) -> FetchResult<Vec<u8>> {
+impl LocalFetcher {
+    pub async fn read(&self, url: &str) -> FetchResult<Vec<u8>> {
         // Remove "file://" prefix if present
         let path = url.trim_start_matches("file://");
-        let data = tokio::fs::read(path).await?;
-        checksum::verify(&data, hash)?;
+
+        // Verify path safety (prevent directory traversal)
+        if Path::new(path).components().count() != path.split('/').count() {
+            return Err(FetchError::InvalidPath(path.to_string()));
+        }
+
+        Ok(fs::read(path).await?)
+    }
+}
+
+#[async_trait]
+impl Fetcher for LocalFetcher {
+    async fn fetch(&self, context: &FetchContext) -> FetchResult<Vec<u8>> {
+        // Read the file content.
+        let data = self.read(&context.url).await?;
+
+        // Resolve checksum and verify checksum if provided
+        if let Some(checksum) = match &context.checksum_url {
+            Some(url) => Some(self.read(url).await?),
+            None => context.checksum.as_ref().map(|s| s.as_bytes().to_vec()),
+        } {
+            verify(&data, std::str::from_utf8(&checksum).unwrap())?;
+        }
 
         Ok(data)
     }
@@ -49,21 +77,21 @@ mod tests {
         let dummy_data = b"test data";
         write(temp_file.path(), dummy_data).await.unwrap();
 
+        let context = FetchContext::new(&format!("file://{}", temp_file.path().display()))
+            .checksum("916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f9");
+
         let fetcher = LocalFetcher;
-        let result = fetcher
-            .fetch(
-                &format!("file://{}", temp_file.path().display()),
-                "916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f9",
-            )
-            .await;
+        let result = fetcher.fetch(&context).await;
 
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_local_fetcher_hash_mismatch() {
+        let context = FetchContext::new("file://dummy_path").checksum("incorrect_hash");
+
         let fetcher = LocalFetcher;
-        let result = fetcher.fetch("file://dummy_path", "incorrect_hash").await;
+        let result = fetcher.fetch(&context).await;
 
         assert!(result.is_err());
 

@@ -20,7 +20,7 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 use tokio::fs;
 
-use hummanta_fetcher::FETCHER_FACTORY;
+use hummanta_fetcher::{FetchContext, DEFAULT_FETCHER};
 use hummanta_manifest::{TargetInfo, Toolchain, ToolchainManifest};
 
 use crate::{context::Context, errors::Result};
@@ -109,8 +109,9 @@ impl Command {
 
 async fn install(name: &str, target: &TargetInfo, target_dir: &Path) -> Result<()> {
     // Fetch and verify the checksum
-    let data = FETCHER_FACTORY
-        .fetch(&target.url, &target.hash)
+    let context = FetchContext::new(&target.url).checksum(&target.hash);
+    let data = DEFAULT_FETCHER
+        .fetch(&context)
         .await
         .with_context(|| format!("Failed to fetch {}", name))?;
 

@@ -16,9 +16,10 @@ use async_trait::async_trait;
 use reqwest::Client;
 
 use crate::{
-    checksum,
+    checksum::verify,
+    context::FetchContext,
     errors::{FetchError, FetchResult},
-    Fetcher,
+    traits::Fetcher,
 };
 
 /// Fetcher implementation for HTTP/HTTPS resources
@@ -31,19 +32,31 @@ impl RemoteFetcher {
     pub fn new() -> Self {
         Self { client: Client::new() }
     }
-}
 
-#[async_trait]
-impl Fetcher for RemoteFetcher {
-    async fn fetch(&self, url: &str, hash: &str) -> FetchResult<Vec<u8>> {
+    pub async fn get(&self, url: &str) -> FetchResult<Vec<u8>> {
         let response = self.client.get(url).send().await?;
 
         if !response.status().is_success() {
             return Err(FetchError::NetworkError(response.error_for_status().unwrap_err()));
         }
 
-        let data = response.bytes().await?.to_vec();
-        checksum::verify(&data, hash)?;
+        Ok(response.bytes().await?.to_vec())
+    }
+}
+
+#[async_trait]
+impl Fetcher for RemoteFetcher {
+    async fn fetch(&self, context: &FetchContext) -> FetchResult<Vec<u8>> {
+        // Download main content
+        let data = self.get(&context.url).await?;
+
+        // Resolve checksum and verify checksum if provided
+        if let Some(checksum) = match &context.checksum_url {
+            Some(url) => Some(self.get(url).await?),
+            None => context.checksum.as_ref().map(|s| s.as_bytes().to_vec()),
+        } {
+            verify(&data, std::str::from_utf8(&checksum).unwrap())?;
+        }
 
         Ok(data)
     }
@@ -93,25 +106,30 @@ mod tests {
     #[tokio::test]
     async fn test_remote_fetcher_success() {
         let url = start_mock_server().await;
+        let context = FetchContext::new(&url)
+            .checksum("916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f9");
+
         let fetcher = Arc::new(RemoteFetcher::new());
-        let result = fetcher
-            .fetch(&url, "916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f9")
-            .await;
+        let result = fetcher.fetch(&context).await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_remote_fetcher_network_error() {
+        let context = FetchContext::new("http://invalid-url").checksum("dummy_hash");
+
         let fetcher = Arc::new(RemoteFetcher::new());
-        let result = fetcher.fetch("http://invalid-url", "dummy_hash").await;
+        let result = fetcher.fetch(&context).await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_remote_fetcher_hash_mismatch() {
         let url = start_mock_server().await;
+        let context = FetchContext::new(&url).checksum("incorrect_hash");
+
         let fetcher = Arc::new(RemoteFetcher::new());
-        let result = fetcher.fetch(&url, "incorrect_hash").await;
+        let result = fetcher.fetch(&context).await;
 
         assert!(result.is_err());
 

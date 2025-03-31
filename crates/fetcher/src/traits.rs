@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod checksum;
-pub mod context;
-pub mod errors;
-pub mod fetcher;
-pub mod local;
-pub mod remote;
-pub mod traits;
+use async_trait::async_trait;
 
-// Re-exports
-pub use context::FetchContext;
-pub use fetcher::{Fetcher, DEFAULT_FETCHER};
+use crate::{context::FetchContext, errors::FetchResult};
+
+/// Defines the common interface for all fetchers
+#[async_trait]
+pub trait Fetcher {
+    /// Fetches content from source and verifies its hash
+    async fn fetch(&self, context: &FetchContext) -> FetchResult<Vec<u8>>;
+
+    /// Returns supported URL schemes (e.g., ["http", "https"])
+    fn supported_schemes(&self) -> Vec<&'static str>;
+}

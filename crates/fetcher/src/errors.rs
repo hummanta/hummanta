@@ -34,4 +34,7 @@ pub enum FetchError {
 
     #[error("Unsupported scheme: {0}")]
     UnsupportedScheme(String),
+
+    #[error("Invalid path components: {0}")]
+    InvalidPath(String),
 }
