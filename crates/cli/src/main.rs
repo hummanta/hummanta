@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod cmd;
+mod config;
 mod context;
 mod errors;
 mod utils;
@@ -29,7 +30,7 @@ use tracing::error;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
-    let ctx = Arc::new(Context::default());
+    let ctx = Arc::new(Context::new()?);
     if let Err(err) = Command::parse().exec(ctx).await {
         error!("{}", err);
         std::process::exit(1);

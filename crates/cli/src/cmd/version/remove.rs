@@ -36,10 +36,8 @@ impl Command {
         let version = &self.version;
 
         // Validate version exists
-        let manifests_path =
-            ctx.manifests_dir().context("Failed to get manifests directory")?.join(version);
-        let toolchains_path =
-            ctx.toolchains_dir().context("Failed to get toolchains directory")?.join(version);
+        let manifests_path = ctx.manifests_dir().join(version);
+        let toolchains_path = ctx.toolchains_dir().join(version);
 
         if !manifests_path.exists() && !toolchains_path.exists() {
             anyhow::bail!("Version {} does not exist", version);

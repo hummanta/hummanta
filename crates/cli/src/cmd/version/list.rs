@@ -27,8 +27,7 @@ pub struct Command {}
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         let active_version = ctx.version();
-        let manifests_dir =
-            ctx.manifests_dir().context("Failed to determine manifests directory")?;
+        let manifests_dir = ctx.manifests_dir();
 
         let mut versions = Vec::new();
         let mut entries =

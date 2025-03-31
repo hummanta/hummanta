@@ -8,6 +8,7 @@ name = "hummanta"
 path = "src/main.rs"
 
 [dependencies]
+# inner dependencies
 hummanta-fetcher.workspace = true
 hummanta-manifest.workspace = true
 
@@ -15,9 +16,11 @@ anyhow.workspace = true
 clap.workspace = true
 dirs.workspace = true
 flate2.workspace = true
+serde.workspace = true
 tar.workspace = true
 target-triple.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+toml.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true

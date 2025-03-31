@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{fs, path::PathBuf, sync::Arc};
-
-use anyhow::Context as _;
 use clap::Args;
+use std::{fs, path::PathBuf, sync::Arc};
 
 use crate::{context::Context, errors::Result, utils::confirm};
 
@@ -40,8 +38,7 @@ pub struct Command {
 
 impl Command {
     pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let toolchains_dir =
-            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
+        let toolchains_dir = ctx.toolchains_dir();
 
         let versions = self.resolve_versions(&ctx)?;
         let mut toolchains = Vec::new();
@@ -84,8 +81,7 @@ impl Command {
     }
 
     fn find_all_versions(&self, ctx: &Context) -> Result<Vec<String>> {
-        let toolchains_dir =
-            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
+        let toolchains_dir = ctx.toolchains_dir();
 
         let mut versions = Vec::new();
         for entry in fs::read_dir(toolchains_dir)? {

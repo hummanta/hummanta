@@ -14,28 +14,58 @@
 
 use std::path::PathBuf;
 
+use anyhow::Context as _;
+
+use crate::{config::Config, errors::Result};
+
 /// Holds the state of the application.
-#[derive(Default)]
-pub struct Context {}
+pub struct Context {
+    /// The configuration for the application.
+    pub config: Config,
+
+    /// The path to the configuration
+    pub config_path: PathBuf,
+}
 
 impl Context {
-    /// Gets the current application version.
+    /// Creates a new context with loaded configuration
+    pub fn new() -> Result<Self> {
+        let home_dir = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
+            .join(".hummanta");
+
+        // Ensure home directory exists
+        if !home_dir.exists() {
+            std::fs::create_dir_all(&home_dir)
+                .context("Failed to create Hummanta home directory")?;
+        }
+
+        let config_path = home_dir.join("config.toml");
+        let config = Config::load(&config_path)?;
+
+        Ok(Self { config, config_path })
+    }
+
+    /// Gets currently active version.
     pub fn version(&self) -> String {
-        format!("v{}", env!("CARGO_PKG_VERSION"))
+        self.config
+            .active_version
+            .clone()
+            .unwrap_or_else(|| format!("v{}", env!("CARGO_PKG_VERSION")))
     }
 
     /// Gets the path to the Hummanta home directory.
-    pub fn home_dir(&self) -> Option<PathBuf> {
-        dirs::home_dir().map(|dir| dir.join(".hummanta"))
+    pub fn home_dir(&self) -> PathBuf {
+        self.config_path.parent().unwrap().to_path_buf()
     }
 
     /// Gets the path to the toolchains directory.
-    pub fn toolchains_dir(&self) -> Option<PathBuf> {
-        self.home_dir().map(|dir| dir.join("toolchains"))
+    pub fn toolchains_dir(&self) -> PathBuf {
+        self.home_dir().join("toolchains")
     }
 
     /// Gets the path to the manifests directory.
-    pub fn manifests_dir(&self) -> Option<PathBuf> {
-        self.home_dir().map(|dir| dir.join("manifests"))
+    pub fn manifests_dir(&self) -> PathBuf {
+        self.home_dir().join("manifests")
     }
 }

@@ -39,8 +39,7 @@ impl Command {
         let version = &self.version;
 
         // Create target directory
-        let manifests_dir =
-            ctx.manifests_dir().context("Failed to get manifests directory")?.join(version);
+        let manifests_dir = ctx.manifests_dir().join(version);
         fs::create_dir_all(&manifests_dir).await.context("Failed to create manifest directory")?;
 
         let archive_url = format!(

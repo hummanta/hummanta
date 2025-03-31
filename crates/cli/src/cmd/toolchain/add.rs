@@ -39,7 +39,6 @@ impl Command {
         // Load manifest for this language and version
         let manifest_path = ctx
             .manifests_dir()
-            .context("Failed to get manifests directory")?
             .join(&version)
             .join("toolchains")
             .join(format!("{}.toml", self.language));
@@ -54,11 +53,7 @@ impl Command {
         }
 
         // Create toolchain directory
-        let toolchain_dir = ctx
-            .toolchains_dir()
-            .context("Failed to get toolchains directory")?
-            .join(&version)
-            .join(&self.language);
+        let toolchain_dir = ctx.toolchains_dir().join(&version).join(&self.language);
         fs::create_dir_all(&toolchain_dir).await.context("Failed to create toolchain directory")?;
 
         let manifest = ToolchainManifest::read(manifest_path)?;

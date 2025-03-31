@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use clap::Args;
 use std::{fs, sync::Arc};
 
 use crate::{context::Context, errors::Result};
-use anyhow::Context as _;
-use clap::Args;
 
 /// Lists all toolchains
 #[derive(Args, Debug)]
@@ -24,8 +23,7 @@ pub struct Command {}
 
 impl Command {
     pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let toolchains_dir =
-            ctx.toolchains_dir().context("Failed to determine toolchains directory")?;
+        let toolchains_dir = ctx.toolchains_dir();
 
         let mut pairs = Vec::new();
 
