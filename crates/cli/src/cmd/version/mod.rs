@@ -55,7 +55,7 @@ impl Command {
         match &self.command {
             Commands::Add(cmd) => cmd.exec(ctx).await,
             Commands::Link(cmd) => cmd.exec(ctx),
-            Commands::List(cmd) => cmd.exec(ctx),
+            Commands::List(cmd) => cmd.exec(ctx).await,
             Commands::Remove(cmd) => cmd.exec(ctx).await,
             Commands::Switch(cmd) => cmd.exec(ctx),
         }

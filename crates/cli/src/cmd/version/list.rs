@@ -14,15 +14,46 @@
 
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result};
+use anyhow::Context as _;
 use clap::Args;
+use tokio::fs;
 
-/// List all available/installed versions
+use crate::{context::Context, errors::Result};
+
+/// List all installed versions
 #[derive(Args, Debug)]
 pub struct Command {}
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        let active_version = ctx.version();
+        let manifests_dir =
+            ctx.manifests_dir().context("Failed to determine manifests directory")?;
+
+        let mut versions = Vec::new();
+        let mut entries =
+            fs::read_dir(&manifests_dir).await.context("Failed to read manifests directory")?;
+
+        while let Some(entry) = entries.next_entry().await? {
+            if entry.file_type().await?.is_dir() {
+                if let Some(name) = entry.file_name().to_str() {
+                    versions.push(name.to_string());
+                }
+            }
+        }
+
+        // Sort versions newest first (reverse order)
+        versions.sort_by(|a, b| b.cmp(a));
+
+        // Display versions with active marker
+        for version in versions {
+            if version == active_version {
+                println!("* {} (active)", version);
+            } else {
+                println!("  {}", version);
+            }
+        }
+
+        Ok(())
     }
 }
