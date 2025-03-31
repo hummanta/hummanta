@@ -12,32 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::path::Path;
-
 use async_trait::async_trait;
 use tokio::fs;
 
-use crate::{
-    checksum::verify,
-    context::FetchContext,
-    errors::{FetchError, FetchResult},
-    traits::Fetcher,
-};
+use crate::{checksum::verify, context::FetchContext, errors::FetchResult, traits::Fetcher};
 
 /// Fetcher implementation for local file system
 pub struct LocalFetcher;
 
 impl LocalFetcher {
     pub async fn read(&self, url: &str) -> FetchResult<Vec<u8>> {
-        // Remove "file://" prefix if present
-        let path = url.trim_start_matches("file://");
-
-        // Verify path safety (prevent directory traversal)
-        if Path::new(path).components().count() != path.split('/').count() {
-            return Err(FetchError::InvalidPath(path.to_string()));
-        }
-
-        Ok(fs::read(path).await?)
+        Ok(fs::read(url.trim_start_matches("file://")).await?)
     }
 }
 
