@@ -24,34 +24,40 @@
 //!         └── solidity
 
 mod add;
+mod link;
 mod list;
 mod remove;
+mod switch;
 
 use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
 use clap::{Args, Subcommand};
 
-/// Manage compilation toolchains
 #[derive(Args, Debug)]
 pub struct Command {
     #[command(subcommand)]
     command: Commands,
 }
 
+/// Manage Hummanta versions
 #[derive(Subcommand, Debug)]
 enum Commands {
     Add(add::Command),
-    Remove(remove::Command),
+    Link(link::Command),
     List(list::Command),
+    Remove(remove::Command),
+    Switch(switch::Command),
 }
 
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
-            Commands::Add(cmd) => cmd.exec(ctx).await,
-            Commands::Remove(cmd) => cmd.exec(ctx),
+            Commands::Add(cmd) => cmd.exec(ctx),
+            Commands::Link(cmd) => cmd.exec(ctx),
             Commands::List(cmd) => cmd.exec(ctx),
+            Commands::Remove(cmd) => cmd.exec(ctx),
+            Commands::Switch(cmd) => cmd.exec(ctx),
         }
     }
 }

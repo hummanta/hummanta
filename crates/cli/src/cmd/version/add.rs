@@ -12,38 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod add;
-mod list;
-mod remove;
-mod show;
-
 use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
-use clap::{Args, Subcommand};
+use clap::Args;
 
-/// View and manage compilation targets
+/// Add a specific Hummanta version
 #[derive(Args, Debug)]
 pub struct Command {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    Add(add::Command),
-    Remove(remove::Command),
-    Show(show::Command),
-    List(list::Command),
+    /// The version to add
+    version: String,
 }
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        match &self.command {
-            Commands::Add(cmd) => cmd.exec(ctx),
-            Commands::Remove(cmd) => cmd.exec(ctx),
-            Commands::Show(cmd) => cmd.exec(ctx),
-            Commands::List(cmd) => cmd.exec(ctx),
-        }
+    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
+        unimplemented!();
     }
 }
