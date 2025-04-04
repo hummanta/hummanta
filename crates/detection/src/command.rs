@@ -40,11 +40,7 @@ pub fn run<T: Detector>(detector: T) {
     let result = detector.detect(&context);
 
     // Print the result as JSON, or an error message if serialization fails.
-    if let Ok(json) = serde_json::to_string(&result) {
-        println!("{}", json);
-    } else {
-        eprintln!("Failed to serialize the detection result.");
-    }
+    println!("{}", result);
 }
 
 #[cfg(test)]

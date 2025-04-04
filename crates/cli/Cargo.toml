@@ -11,6 +11,7 @@ path = "src/main.rs"
 # inner dependencies
 hummanta-fetcher.workspace = true
 hummanta-manifest.workspace = true
+hummanta-detection.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true

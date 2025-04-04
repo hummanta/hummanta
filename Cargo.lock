@@ -470,6 +470,7 @@ dependencies = [
  "clap",
  "dirs",
  "flate2",
+ "hummanta-detection",
  "hummanta-fetcher",
  "hummanta-manifest",
  "serde",

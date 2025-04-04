@@ -67,6 +67,18 @@ impl ToolchainManifest {
         self.0.get(category)?.get(name)
     }
 
+    /// Retrieves all toolchains for a given category.
+    ///
+    /// # Arguments
+    /// * `category` - The category name.
+    ///
+    /// # Returns
+    /// An `Option` containing a reference to the map of toolchains for the specified category,
+    /// or `None` if the category does not exist.
+    pub fn by_category(&self, category: &str) -> Option<&HashMap<String, Toolchain>> {
+        self.0.get(category)
+    }
+
     /// Removes a toolchain entry.
     ///
     /// # Arguments

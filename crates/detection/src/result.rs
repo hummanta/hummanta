@@ -38,6 +38,20 @@ impl DetectResult {
     }
 }
 
+impl std::str::FromStr for DetectResult {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
+}
+
+impl std::fmt::Display for DetectResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).expect("Failed to serialize DetectResult"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
