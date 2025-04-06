@@ -19,7 +19,10 @@ mod toolchain;
 use clap::Parser;
 use std::fs;
 
-use hummanta_utils::archive::archive_dir;
+use hummanta_utils::{
+    archive::archive_dir,
+    checksum::{self, CHECKSUM_FILE_SUFFIX},
+};
 
 const HUMMANTA_GITHUB_REPO: &str = "github.com/hummanta/hummanta";
 
@@ -54,11 +57,17 @@ async fn main() {
     // Archive all the manifests
     let archive_input_path = artifact_path.join("manifests");
     let archive_name = format!("manifests-{}.tar.gz", args.version());
-    let archive_output_path = artifact_path.join(archive_name);
+    let archive_output_path = artifact_path.join(&archive_name);
 
     archive_dir(&archive_input_path, &archive_output_path)
         .await
         .unwrap_or_else(|_| panic!("Failed to create archive for {:?}", archive_output_path));
+
+    // Generate checksum for the manifests archive
+    let checksum_path = artifact_path.join(format!("{}{}", &archive_name, CHECKSUM_FILE_SUFFIX));
+    checksum::generate(&archive_output_path, &checksum_path)
+        .await
+        .unwrap_or_else(|_| panic!("Failed to generate checksum for {:?}", archive_output_path));
 
     println!("Done!");
 }

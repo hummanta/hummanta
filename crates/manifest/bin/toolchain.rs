@@ -15,12 +15,12 @@
 use std::{collections::HashMap, fs, path::Path};
 
 use hummanta_manifest::*;
+use hummanta_utils::checksum::CHECKSUM_FILE_SUFFIX;
 
 use crate::{args::Arguments, index, HUMMANTA_GITHUB_REPO};
 
 const INDEX_MANIFEST_NAME: &str = "index.toml";
 const TOOLCHAINS_DIR_NAME: &str = "toolchains";
-const CHECKSUM_FILE_SUFFIX: &str = ".sha256";
 
 /// process the toolchain manifests
 pub async fn generate(
@@ -129,6 +129,7 @@ async fn build(pkg: &PackageToolchain, artifact_path: &Path, args: &Arguments) -
 
 #[cfg(test)]
 mod tests {
+    use hummanta_utils::checksum::CHECKSUM_FILE_SUFFIX;
     use std::{
         fs::{self, File},
         io::Write,
@@ -221,7 +222,7 @@ mod tests {
             Arguments { path: PathBuf::from("."), local: false, version: "v1.0.0".to_string() };
 
         let archive_name = "example-v1.0.0-x86_64-unknown-linux-gnu.tar.gz";
-        let checksum_name = format!("{}.sha256", archive_name);
+        let checksum_name = format!("{}{}", archive_name, CHECKSUM_FILE_SUFFIX);
 
         let archive_path = artifact_path.join(archive_name);
         let checksum_path = artifact_path.join(&checksum_name);

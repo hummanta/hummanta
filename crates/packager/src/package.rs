@@ -17,7 +17,10 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
 
-use hummanta_utils::{archive::archive_file, checksum};
+use hummanta_utils::{
+    archive::archive_file,
+    checksum::{self, CHECKSUM_FILE_SUFFIX},
+};
 
 use crate::utils::is_executable;
 
@@ -43,7 +46,7 @@ async fn process(path: PathBuf, output_path: &Path, target: &str, version: &str)
     let bin_name = path.file_stem().unwrap().to_string_lossy().to_string();
     let archive_name = format!("{}-{}-{}.tar.gz", bin_name, version, target);
     let archive_path = output_path.join(&archive_name);
-    let checksum_path = output_path.join(format!("{}.sha256", archive_name));
+    let checksum_path = output_path.join(format!("{}{}", archive_name, CHECKSUM_FILE_SUFFIX));
 
     println!("{}: \n  {}\n  {}\n", bin_name, archive_path.display(), checksum_path.display());
 
@@ -100,7 +103,7 @@ mod tests {
 
         // Construct the archive and checksum file names
         let archive_name = format!("mock-executable-{}-{}.tar.gz", version, target);
-        let checksum_name = format!("{}.sha256", archive_name);
+        let checksum_name = format!("{}{}", archive_name, CHECKSUM_FILE_SUFFIX);
 
         // Ensure the archive and checksum files are created
         assert!(output_path.join(&archive_name).exists());
@@ -132,7 +135,7 @@ mod tests {
 
         // Construct the archive and checksum file names
         let archive_name = format!("non-executable-{}-{}.tar.gz", version, target);
-        let checksum_name = format!("{}.sha256", archive_name);
+        let checksum_name = format!("{}{}", archive_name, CHECKSUM_FILE_SUFFIX);
 
         // Ensure that the archive and checksum files do not exist since the file is not executable
         assert!(!output_path.join(&archive_name).exists());

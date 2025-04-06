@@ -18,3 +18,5 @@ mod verify;
 // Re-export
 pub use generate::generate;
 pub use verify::verify;
+
+pub const CHECKSUM_FILE_SUFFIX: &str = ".sha256";

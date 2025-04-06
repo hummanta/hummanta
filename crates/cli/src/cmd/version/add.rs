@@ -19,7 +19,7 @@ use clap::Args;
 use tokio::fs;
 
 use hummanta_fetcher::{FetchContext, DEFAULT_FETCHER};
-use hummanta_utils::archive;
+use hummanta_utils::{archive, checksum::CHECKSUM_FILE_SUFFIX};
 
 use crate::{context::Context, errors::Result};
 
@@ -45,12 +45,10 @@ impl Command {
             "https://{}/releases/download/{}/{}-{}.tar.gz",
             HUMMANTA_GITHUB_REPO, version, MANIFEST_ARCHIVE_NAME, version
         );
-
-        // @TODO: Currently, the manifests does not support checksum,
-        // so we will skip this for now.
-        let context = FetchContext::new(&archive_url);
+        let checksum_url = format!("{}{}", archive_url, CHECKSUM_FILE_SUFFIX);
 
         // Fetch and verify the checksum
+        let context = FetchContext::new(&archive_url).checksum_url(&checksum_url);
         let data = DEFAULT_FETCHER.fetch(&context).await?;
 
         // Unpack the file and extract its contents to the target directory
