@@ -10,7 +10,6 @@ hummanta-utils.workspace = true
 async-trait.workspace = true
 once_cell.workspace = true
 reqwest.workspace = true
-sha2.workspace = true
 tempfile.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

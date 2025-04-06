@@ -12,13 +12,12 @@ path = "src/main.rs"
 hummanta-fetcher.workspace = true
 hummanta-manifest.workspace = true
 hummanta-detection.workspace = true
+hummanta-utils.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true
 dirs.workspace = true
-flate2.workspace = true
 serde.workspace = true
-tar.workspace = true
 target-triple.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

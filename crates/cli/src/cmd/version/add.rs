@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{io::Cursor, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Context as _;
 use clap::Args;
-use flate2::read::GzDecoder;
-use tar::Archive;
 use tokio::fs;
 
 use hummanta_fetcher::{FetchContext, DEFAULT_FETCHER};
+use hummanta_utils::archive;
 
 use crate::{context::Context, errors::Result};
 
@@ -55,10 +54,7 @@ impl Command {
         let data = DEFAULT_FETCHER.fetch(&context).await?;
 
         // Unpack the file and extract its contents to the target directory
-        let buffer = Cursor::new(data);
-        let decoder = GzDecoder::new(buffer);
-        let mut archive = Archive::new(decoder);
-        archive.unpack(manifests_dir).context("Failed to unpack tar.gz file")?;
+        archive::unpack(&data, &manifests_dir)?;
 
         println!("Successfully added and verified version {}", version);
         Ok(())

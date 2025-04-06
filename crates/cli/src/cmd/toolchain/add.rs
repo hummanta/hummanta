@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{io::Cursor, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 use anyhow::Context as _;
 use clap::Args;
-use flate2::read::GzDecoder;
-use tar::Archive;
 use tokio::fs;
 
 use hummanta_fetcher::{FetchContext, DEFAULT_FETCHER};
 use hummanta_manifest::{TargetInfo, Toolchain, ToolchainManifest};
+use hummanta_utils::archive;
 
 use crate::{context::Context, errors::Result};
 
@@ -84,13 +83,10 @@ impl Command {
                         .get_target_info(current_target)
                         .map(|target| (name.to_string(), target.clone()))
                 })
-                .for_each(|(name, target)| {
-                    let name = name.clone();
+                .for_each(|(_, target)| {
                     let target = target.clone();
                     let target_dir = target_dir.to_path_buf();
-                    handles.push(tokio::spawn(async move {
-                        install(&name, &target, &target_dir).await
-                    }));
+                    handles.push(tokio::spawn(async move { install(&target, &target_dir).await }));
                 });
         });
 
@@ -102,19 +98,13 @@ impl Command {
     }
 }
 
-async fn install(name: &str, target: &TargetInfo, target_dir: &Path) -> Result<()> {
+async fn install(target: &TargetInfo, target_dir: &Path) -> Result<()> {
     // Fetch and verify the checksum
     let context = FetchContext::new(&target.url).checksum(&target.hash);
-    let data = DEFAULT_FETCHER
-        .fetch(&context)
-        .await
-        .with_context(|| format!("Failed to fetch {}", name))?;
+    let data = DEFAULT_FETCHER.fetch(&context).await?;
 
     // Unpack the file and extract its contents to the target directory
-    let buffer = Cursor::new(data);
-    let decoder = GzDecoder::new(buffer);
-    let mut archive = Archive::new(decoder);
-    archive.unpack(target_dir).context("Failed to unpack tar.gz file")?;
+    archive::unpack(&data, target_dir)?;
 
     Ok(())
 }

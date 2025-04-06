@@ -14,7 +14,9 @@
 
 mod archive_dir;
 mod archive_file;
+mod unpack;
 
 // Re-exports
 pub use archive_dir::archive_dir;
 pub use archive_file::archive_file;
+pub use unpack::unpack;

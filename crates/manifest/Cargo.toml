@@ -11,13 +11,8 @@ path = "bin/main.rs"
 # inner dependencies
 hummanta-utils.workspace = true
 
-anyhow.workspace = true
 clap.workspace = true
-flate2.workspace = true
 serde.workspace = true
-sha2.workspace = true
-tar.workspace = true
-target-triple.workspace = true
 tempfile.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

@@ -464,17 +464,16 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hummanta-cli"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "clap",
  "dirs",
- "flate2",
  "hummanta-detection",
  "hummanta-fetcher",
  "hummanta-manifest",
+ "hummanta-utils",
  "serde",
- "tar",
  "target-triple",
  "thiserror",
  "tokio",
@@ -485,7 +484,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-detection"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "clap",
  "serde",
@@ -494,13 +493,12 @@ dependencies = [
 
 [[package]]
 name = "hummanta-fetcher"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "async-trait",
  "hummanta-utils",
  "once_cell",
  "reqwest",
- "sha2",
  "tempfile",
  "thiserror",
  "tokio",
@@ -508,16 +506,11 @@ dependencies = [
 
 [[package]]
 name = "hummanta-manifest"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
- "anyhow",
  "clap",
- "flate2",
  "hummanta-utils",
  "serde",
- "sha2",
- "tar",
- "target-triple",
  "tempfile",
  "thiserror",
  "tokio",
@@ -526,14 +519,11 @@ dependencies = [
 
 [[package]]
 name = "hummanta-packager"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "clap",
- "flate2",
  "hummanta-utils",
- "sha2",
- "tar",
  "target-triple",
  "tempfile",
  "tokio",
@@ -542,7 +532,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-utils"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "flate2",
@@ -1350,7 +1340,7 @@ dependencies = [
 
 [[package]]
 name = "solidity-detector"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "hummanta-detection",
  "walkdir",
