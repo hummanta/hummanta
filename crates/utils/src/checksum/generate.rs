@@ -22,7 +22,7 @@ use tokio::{
 };
 
 /// Generate SHA256 checksum of a file and write it to an output file
-pub async fn checksum(file: &Path, output_path: &Path) -> Result<()> {
+pub async fn generate(file: &Path, output_path: &Path) -> Result<()> {
     // Open the file for reading
     let mut hasher = Sha256::new();
     let file = fs::File::open(file)
@@ -72,7 +72,7 @@ mod tests {
         file.write_all(b"Hello, world!").unwrap();
 
         // Generate checksum
-        checksum(&file_path, &output_path).await.unwrap();
+        generate(&file_path, &output_path).await.unwrap();
 
         // Verify checksum file exists
         assert!(output_path.exists());
@@ -97,7 +97,7 @@ mod tests {
         let output_path = dir.path().join("checksum.txt");
 
         // Attempt to generate checksum for a nonexistent file
-        let result = checksum(&file_path, &output_path).await;
+        let result = generate(&file_path, &output_path).await;
 
         // Verify error is returned
         assert!(result.is_err());
@@ -121,7 +121,7 @@ mod tests {
         fs::set_permissions(&output_path, permissions).unwrap();
 
         // Attempt to generate checksum
-        let result = checksum(&file_path, &output_path).await;
+        let result = generate(&file_path, &output_path).await;
 
         // Verify error is returned
         assert!(result.is_err());

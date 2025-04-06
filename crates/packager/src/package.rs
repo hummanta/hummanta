@@ -17,9 +17,9 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
 
-use hummanta_utils::archive::archive_file;
+use hummanta_utils::{archive::archive_file, checksum};
 
-use crate::{checksum::checksum, utils::is_executable};
+use crate::utils::is_executable;
 
 /// Package all executables in the output directory
 pub async fn package(
@@ -53,7 +53,7 @@ async fn process(path: PathBuf, output_path: &Path, target: &str, version: &str)
         .context(format!("Failed to create archive for {:?}", path))?;
 
     // Generate checksum for the archive
-    checksum(&archive_path, &checksum_path)
+    checksum::generate(&archive_path, &checksum_path)
         .await
         .context(format!("Failed to generate checksum for {:?}", archive_path))?;
 

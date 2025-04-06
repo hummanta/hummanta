@@ -13,10 +13,10 @@
 // limitations under the License.
 
 use async_trait::async_trait;
+use hummanta_utils::checksum;
 use reqwest::Client;
 
 use crate::{
-    checksum::verify,
     context::FetchContext,
     errors::{FetchError, FetchResult},
     traits::Fetcher,
@@ -55,7 +55,9 @@ impl Fetcher for RemoteFetcher {
             Some(url) => Some(self.get(url).await?),
             None => context.checksum.as_ref().map(|s| s.as_bytes().to_vec()),
         } {
-            verify(&data, std::str::from_utf8(&checksum).unwrap())?;
+            let expected_hash = std::str::from_utf8(&checksum).unwrap();
+            checksum::verify(&data, expected_hash)
+                .map_err(|_| FetchError::HashMismatch(expected_hash.to_string()))?;
         }
 
         Ok(data)
@@ -133,7 +135,7 @@ mod tests {
 
         assert!(result.is_err());
 
-        if let Err(FetchError::HashMismatch { expected, actual: _ }) = result {
+        if let Err(FetchError::HashMismatch(expected)) = result {
             assert_eq!(expected, "incorrect_hash");
         }
     }

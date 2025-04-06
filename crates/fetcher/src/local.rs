@@ -13,9 +13,14 @@
 // limitations under the License.
 
 use async_trait::async_trait;
+use hummanta_utils::checksum;
 use tokio::fs;
 
-use crate::{checksum::verify, context::FetchContext, errors::FetchResult, traits::Fetcher};
+use crate::{
+    context::FetchContext,
+    errors::{FetchError, FetchResult},
+    traits::Fetcher,
+};
 
 /// Fetcher implementation for local file system
 pub struct LocalFetcher;
@@ -37,7 +42,9 @@ impl Fetcher for LocalFetcher {
             Some(url) => Some(self.read(url).await?),
             None => context.checksum.as_ref().map(|s| s.as_bytes().to_vec()),
         } {
-            verify(&data, std::str::from_utf8(&checksum).unwrap())?;
+            let expected_hash = std::str::from_utf8(&checksum).unwrap();
+            checksum::verify(&data, expected_hash)
+                .map_err(|_| FetchError::HashMismatch(expected_hash.to_string()))?;
         }
 
         Ok(data)
@@ -80,7 +87,7 @@ mod tests {
 
         assert!(result.is_err());
 
-        if let Err(FetchError::HashMismatch { expected, actual: _ }) = result {
+        if let Err(FetchError::HashMismatch(expected)) = result {
             assert_eq!(expected, "incorrect_hash");
         }
     }

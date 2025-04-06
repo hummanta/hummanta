@@ -29,8 +29,8 @@ pub enum FetchError {
     #[error("Network request failed: {0}")]
     NetworkError(#[from] reqwest::Error),
 
-    #[error("Hash mismatch - expected: {expected}, actual: {actual}")]
-    HashMismatch { expected: String, actual: String },
+    #[error("Hash mismatch - expected: {0}")]
+    HashMismatch(String),
 
     #[error("Unsupported scheme: {0}")]
     UnsupportedScheme(String),

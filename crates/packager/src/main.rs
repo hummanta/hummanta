@@ -13,7 +13,6 @@
 // limitations under the License.
 
 mod args;
-mod checksum;
 mod package;
 mod utils;
 

@@ -4,6 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+# inner dependencies
+hummanta-utils.workspace = true
+
 async-trait.workspace = true
 once_cell.workspace = true
 reqwest.workspace = true

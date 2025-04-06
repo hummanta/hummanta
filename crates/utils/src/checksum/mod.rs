@@ -12,5 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod checksum;
+mod generate;
+mod verify;
+
+// Re-export
+pub use generate::generate;
+pub use verify::verify;

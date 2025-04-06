@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod checksum;
 pub mod context;
 pub mod errors;
 pub mod fetcher;

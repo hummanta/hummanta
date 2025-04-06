@@ -14,19 +14,16 @@
 
 use sha2::{Digest, Sha256};
 
-use crate::errors::{FetchError, FetchResult};
+use anyhow::Result;
 
 /// Verifies SHA-256 hash of the data
-pub fn verify(data: &[u8], expected_hash: &str) -> FetchResult<()> {
+pub fn verify(data: &[u8], expected_hash: &str) -> Result<()> {
     let mut hasher = Sha256::new();
     hasher.update(data);
     let actual_hash = format!("{:x}", hasher.finalize());
 
     if actual_hash != expected_hash {
-        return Err(FetchError::HashMismatch {
-            expected: expected_hash.to_string(),
-            actual: actual_hash,
-        });
+        anyhow::bail!("Hash mismatch: expected {}, actual {}", expected_hash, actual_hash);
     }
 
     Ok(())
@@ -50,10 +47,5 @@ mod tests {
         let result = verify(data, expected_hash);
 
         assert!(result.is_err());
-
-        if let Err(FetchError::HashMismatch { expected, actual }) = result {
-            assert_eq!(expected, expected_hash);
-            assert_ne!(actual, expected_hash);
-        }
     }
 }
