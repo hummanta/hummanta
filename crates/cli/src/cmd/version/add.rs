@@ -45,10 +45,26 @@ impl Command {
             "https://{}/releases/download/{}/{}-{}.tar.gz",
             HUMMANTA_GITHUB_REPO, version, MANIFEST_ARCHIVE_NAME, version
         );
-        let checksum_url = format!("{}{}", archive_url, CHECKSUM_FILE_SUFFIX);
+
+        // Since version v0.5.4 of the manifest now supports checksum
+        // (see [GitHub commit](https://github.com/hummanta/hummanta/commit/3c741de029d907557f952ca0cfc8c65a3147679f)),
+        // and earlier versions do not support this feature, we need to apply special handling here
+        // for backward compatibility. This compatibility handling will be removed once the releases
+        // prior to version 1.0.0 are deprecated.
+
+        // Parse both versions using semver for comparison
+        let version1 = semver::Version::parse(version.trim_matches('v')).unwrap();
+        let version2 = semver::Version::parse("0.5.4").unwrap();
+
+        // Determine which context to use based on the version comparison
+        let context = if version1 >= version2 {
+            let checksum_url: String = format!("{}{}", archive_url, CHECKSUM_FILE_SUFFIX);
+            FetchContext::new(&archive_url).checksum_url(&checksum_url)
+        } else {
+            FetchContext::new(&archive_url)
+        };
 
         // Fetch and verify the checksum
-        let context = FetchContext::new(&archive_url).checksum_url(&checksum_url);
         let data = DEFAULT_FETCHER.fetch(&context).await?;
 
         // Unpack the file and extract its contents to the target directory

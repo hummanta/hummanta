@@ -17,6 +17,7 @@ hummanta-utils.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 dirs.workspace = true
+semver.workspace = true
 serde.workspace = true
 target-triple.workspace = true
 thiserror.workspace = true

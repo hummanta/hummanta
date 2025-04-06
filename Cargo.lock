@@ -464,7 +464,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hummanta-cli"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -473,6 +473,7 @@ dependencies = [
  "hummanta-fetcher",
  "hummanta-manifest",
  "hummanta-utils",
+ "semver",
  "serde",
  "target-triple",
  "thiserror",
@@ -484,7 +485,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-detection"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "clap",
  "serde",
@@ -493,7 +494,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-fetcher"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "hummanta-utils",
@@ -506,7 +507,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-manifest"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "clap",
  "hummanta-utils",
@@ -519,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-packager"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -532,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "hummanta-utils"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "flate2",
@@ -1226,6 +1227,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "semver"
+version = "1.0.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
+
+[[package]]
 name = "serde"
 version = "1.0.219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1340,7 +1347,7 @@ dependencies = [
 
 [[package]]
 name = "solidity-detector"
-version = "0.5.4"
+version = "0.6.0"
 dependencies = [
  "hummanta-detection",
  "walkdir",
