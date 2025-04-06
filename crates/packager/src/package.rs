@@ -17,7 +17,9 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
 
-use crate::{archive::archive, checksum::checksum, utils::is_executable};
+use hummanta_utils::archive::archive_file;
+
+use crate::{checksum::checksum, utils::is_executable};
 
 /// Package all executables in the output directory
 pub async fn package(
@@ -46,7 +48,7 @@ async fn process(path: PathBuf, output_path: &Path, target: &str, version: &str)
     println!("{}: \n  {}\n  {}\n", bin_name, archive_path.display(), checksum_path.display());
 
     // Create a tar.gz archive for the executable
-    archive(&path, &archive_path)
+    archive_file(&path, &archive_path)
         .await
         .context(format!("Failed to create archive for {:?}", path))?;
 

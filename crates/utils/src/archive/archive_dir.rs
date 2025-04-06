@@ -12,20 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{fs::File, path::Path};
+use std::{fs, path::Path};
 
 use anyhow::{Context, Result};
 use flate2::{write::GzEncoder, Compression};
 use tar::Builder;
 
-/// Archive the given input directory, and save it to output path
-pub async fn archive(input_path: &Path, output_path: &Path) -> Result<()> {
-    let file = File::create(output_path)
-        .context(format!("Failed to create archive: {:?}", output_path))?;
+/// Archive a directory into tar.gz
+pub async fn archive_dir(src: &Path, dest: &Path) -> Result<()> {
+    if !src.exists() {
+        anyhow::bail!("Source directory does not exist: {:?}", src);
+    }
+
+    if !src.is_dir() {
+        anyhow::bail!("Source path is not a directory: {:?}", src);
+    }
+
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent)
+            .context("Failed to create parent directories for destination")?;
+    }
+
+    let file = fs::File::create(dest).context(format!("Failed to create archive: {:?}", dest))?;
     let encoder = GzEncoder::new(file, Compression::default());
 
     let mut tar = Builder::new(encoder);
-    tar.append_dir_all("", input_path).context("Failed to add directory to archive")?;
+    tar.append_dir_all("", src).context("Failed to add directory to archive")?;
     tar.finish().context("Failed to finish tar creation")?;
 
     Ok(())
@@ -54,7 +66,7 @@ mod tests {
         writeln!(file, "Hello, world!").unwrap();
 
         // Call the archive function
-        let result = archive(&input_dir, &output_file).await;
+        let result = archive_dir(&input_dir, &output_file).await;
 
         // Assert success
         assert!(result.is_ok());
@@ -71,7 +83,7 @@ mod tests {
         fs::create_dir(&input_dir).unwrap();
 
         // Call the archive function
-        let result = archive(&input_dir, &output_file).await;
+        let result = archive_dir(&input_dir, &output_file).await;
 
         // Assert success
         assert!(result.is_ok());
@@ -85,26 +97,7 @@ mod tests {
         let output_file = temp_dir.path().join("nonexistent_archive.tar.gz");
 
         // Call the archive function with a nonexistent input directory
-        let result = archive(&input_dir, &output_file).await;
-
-        // Assert failure
-        assert!(result.is_err());
-    }
-
-    #[tokio::test]
-    async fn test_archive_output_path_unwritable() {
-        let temp_dir = tempdir().unwrap();
-        let input_dir = temp_dir.path().join("input");
-        let output_file = temp_dir.path().join("unwritable_dir").join("archive.tar.gz");
-
-        // Create input directory and files
-        fs::create_dir(&input_dir).unwrap();
-        let file_path = input_dir.join("test_file.txt");
-        let mut file = File::create(&file_path).unwrap();
-        writeln!(file, "Hello, world!").unwrap();
-
-        // Call the archive function with an unwritable output path
-        let result = archive(&input_dir, &output_file).await;
+        let result = archive_dir(&input_dir, &output_file).await;
 
         // Assert failure
         assert!(result.is_err());
@@ -123,7 +116,7 @@ mod tests {
         writeln!(file, "Hello, world!").unwrap();
 
         // Call the archive function
-        let result = archive(&input_dir, &output_file).await;
+        let result = archive_dir(&input_dir, &output_file).await;
 
         // Assert success
         assert!(result.is_ok());

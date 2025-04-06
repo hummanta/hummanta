@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod archive;
 mod args;
 mod index;
 mod toolchain;
 
 use clap::Parser;
 use std::fs;
+
+use hummanta_utils::archive::archive_dir;
 
 const HUMMANTA_GITHUB_REPO: &str = "github.com/hummanta/hummanta";
 
@@ -55,7 +56,7 @@ async fn main() {
     let archive_name = format!("manifests-{}.tar.gz", args.version());
     let archive_output_path = artifact_path.join(archive_name);
 
-    archive::archive(&archive_input_path, &archive_output_path)
+    archive_dir(&archive_input_path, &archive_output_path)
         .await
         .unwrap_or_else(|_| panic!("Failed to create archive for {:?}", archive_output_path));
 

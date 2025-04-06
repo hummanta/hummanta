@@ -8,6 +8,9 @@ name = "hummanta-manifest-generator"
 path = "bin/main.rs"
 
 [dependencies]
+# inner dependencies
+hummanta-utils.workspace = true
+
 anyhow.workspace = true
 clap.workspace = true
 flate2.workspace = true

@@ -4,7 +4,7 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 
 [workspace.dependencies]
@@ -12,6 +12,7 @@ edition = "2021"
 hummanta-detection = { path = "crates/detection" }
 hummanta-fetcher = { path = "crates/fetcher" }
 hummanta-manifest = { path = "crates/manifest" }
+hummanta-utils = { path = "crates/utils" }
 
 anyhow = "1.0.97"
 async-trait = "0.1.88"

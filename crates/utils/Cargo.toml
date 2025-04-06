@@ -1,18 +1,11 @@
 [package]
-name = "hummanta-packager"
+name = "hummanta-utils"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-# inner dependencies
-hummanta-utils.workspace = true
-
 anyhow.workspace = true
-clap.workspace = true
 flate2.workspace = true
-sha2.workspace = true
 tar.workspace = true
-target-triple.workspace = true
 tempfile.workspace = true
 tokio.workspace = true
-walkdir.workspace = true
