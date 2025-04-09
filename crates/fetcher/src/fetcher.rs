@@ -14,8 +14,6 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use once_cell::sync::Lazy;
-
 use crate::{
     context::FetchContext,
     errors::{FetchError, FetchResult},
@@ -23,17 +21,6 @@ use crate::{
     remote::RemoteFetcher,
     traits,
 };
-
-/// This static variable holds the default fetcher instance.
-pub static DEFAULT_FETCHER: Lazy<Fetcher> = Lazy::new(|| {
-    let mut fetcher = Fetcher::new();
-
-    // Register default fetchers
-    fetcher.register(Arc::new(RemoteFetcher::new()));
-    fetcher.register(Arc::new(LocalFetcher));
-
-    fetcher
-});
 
 /// Manages multiple fetchers and routes requests based on URL scheme
 pub struct Fetcher {
@@ -73,8 +60,15 @@ impl Fetcher {
 }
 
 impl Default for Fetcher {
+    /// Holds the default fetcher instance.
     fn default() -> Self {
-        Self::new()
+        let mut fetcher = Self::new();
+
+        // Register default fetchers
+        fetcher.register(Arc::new(RemoteFetcher::new()));
+        fetcher.register(Arc::new(LocalFetcher));
+
+        fetcher
     }
 }
 

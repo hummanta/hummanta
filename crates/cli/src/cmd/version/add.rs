@@ -18,7 +18,7 @@ use anyhow::Context as _;
 use clap::Args;
 use tokio::fs;
 
-use hummanta_fetcher::{FetchContext, DEFAULT_FETCHER};
+use hummanta_fetcher::{FetchContext, Fetcher};
 use hummanta_utils::{archive, checksum::CHECKSUM_FILE_SUFFIX};
 
 use crate::{context::Context, errors::Result};
@@ -65,7 +65,7 @@ impl Command {
         };
 
         // Fetch and verify the checksum
-        let data = DEFAULT_FETCHER.fetch(&context).await?;
+        let data = Fetcher::default().fetch(&context).await?;
 
         // Unpack the file and extract its contents to the target directory
         archive::unpack(&data, &manifests_dir)?;

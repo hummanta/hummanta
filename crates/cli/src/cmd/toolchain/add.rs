@@ -18,7 +18,7 @@ use anyhow::Context as _;
 use clap::Args;
 use tokio::fs;
 
-use hummanta_fetcher::{FetchContext, DEFAULT_FETCHER};
+use hummanta_fetcher::{FetchContext, Fetcher};
 use hummanta_manifest::{TargetInfo, Toolchain, ToolchainManifest};
 use hummanta_utils::archive;
 
@@ -101,7 +101,7 @@ impl Command {
 async fn install(target: &TargetInfo, target_dir: &Path) -> Result<()> {
     // Fetch and verify the checksum
     let context = FetchContext::new(&target.url).checksum(&target.hash);
-    let data = DEFAULT_FETCHER.fetch(&context).await?;
+    let data = Fetcher::default().fetch(&context).await?;
 
     // Unpack the file and extract its contents to the target directory
     archive::unpack(&data, target_dir)?;

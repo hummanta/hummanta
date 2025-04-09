@@ -21,4 +21,4 @@ pub mod traits;
 
 // Re-exports
 pub use context::FetchContext;
-pub use fetcher::{Fetcher, DEFAULT_FETCHER};
+pub use fetcher::Fetcher;
