@@ -37,7 +37,7 @@ manifest local="true" version="":
 
 # Package executables and generate checksums
 package profile="dev" target="" version="":
-    cargo run --package hummanta-packager -- \
+    cargo run --package hmt-packager -- \
         --profile={{profile}} --target={{target}} --version={{version}}
 
 # Release the project in the local environment
