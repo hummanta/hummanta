@@ -23,7 +23,7 @@ use std::{
 use anyhow::Context as _;
 use clap::Args;
 
-use hummanta_detection::DetectResult;
+use hmt_detection::DetectResult;
 use hummanta_manifest::{IndexManifest, ProjectManifest, Toolchain, ToolchainManifest};
 
 use crate::{context::Context, errors::Result};

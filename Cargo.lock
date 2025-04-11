@@ -423,6 +423,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "hmt-detection"
+version = "0.6.1"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "http"
 version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -469,7 +478,7 @@ dependencies = [
  "anyhow",
  "clap",
  "dirs",
- "hummanta-detection",
+ "hmt-detection",
  "hummanta-fetcher",
  "hummanta-manifest",
  "hummanta-utils",
@@ -481,15 +490,6 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "hummanta-detection"
-version = "0.6.1"
-dependencies = [
- "clap",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -1349,7 +1349,7 @@ dependencies = [
 name = "solidity-detector"
 version = "0.6.1"
 dependencies = [
- "hummanta-detection",
+ "hmt-detection",
  "walkdir",
 ]
 

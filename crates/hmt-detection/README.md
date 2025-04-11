@@ -1,6 +1,6 @@
-# hummanta-detection
+# hmt-detection
 
-`hummanta-detection` is a Rust library that provides helper functions for command-line detection tools. It offers a unified interface for writing language-specific detectors and ensures consistent command-line argument parsing and JSON output but does not itself provide CLI capabilities.
+`hmt-detection` is a Rust library that provides helper functions for command-line detection tools. It offers a unified interface for writing language-specific detectors and ensures consistent command-line argument parsing and JSON output but does not itself provide CLI capabilities.
 
 ## Features
 - Provides a standard interface for writing custom detectors.
@@ -10,19 +10,19 @@
 
 ## Installation
 
-To use `hummanta-detection` as a library, add the following to your `Cargo.toml`:
+To use `hmt-detection` as a library, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hummanta-detection = { git = "https://github.com/hummanta/hummanta.git" }
+hmt-detection = { git = "https://github.com/hummanta/hummanta.git" }
 ```
 
 ## Usage
 
-You can integrate `hummanta-detection` into your Rust project and define custom detectors:
+You can integrate `hmt-detection` into your Rust project and define custom detectors:
 
 ```rust
-use hummanta_detection::{DetectContext, DetectResult, Detector};
+use hmt_detection::{DetectContext, DetectResult, Detector};
 
 struct MyDetector;
 
@@ -40,7 +40,7 @@ impl Detector for MyDetector {
 Then, in your `main.rs`, use the `run` function to execute it:
 
 ```rust
-use hummanta_detection::command;
+use hmt_detection::command;
 
 fn main() {
     command::run(MyDetector);

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use hummanta_detection::{command, DetectContext, DetectResult, Detector};
+use hmt_detection::{command, DetectContext, DetectResult, Detector};
 use walkdir::WalkDir;
 
 pub struct SolidityFileDetector;
