@@ -19,8 +19,8 @@ use clap::Args;
 use tokio::fs;
 
 use hmt_fetcher::{FetchContext, Fetcher};
+use hmt_manifest::{TargetInfo, Toolchain, ToolchainManifest};
 use hmt_utils::archive;
-use hummanta_manifest::{TargetInfo, Toolchain, ToolchainManifest};
 
 use crate::{context::Context, errors::Result};
 

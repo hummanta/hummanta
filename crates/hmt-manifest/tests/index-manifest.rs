@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use hummanta_manifest::IndexManifest;
+use hmt_manifest::IndexManifest;
 
 const TOOLCHAINS_INDEX_TOML: &str = "solidity = \"solidity.toml\"\n";
 

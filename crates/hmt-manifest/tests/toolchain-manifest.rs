@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use hummanta_manifest::{
-    PackageToolchain, ReleaseToolchain, TargetInfo, Toolchain, ToolchainManifest,
-};
+use hmt_manifest::{PackageToolchain, ReleaseToolchain, TargetInfo, Toolchain, ToolchainManifest};
 use std::collections::HashMap;
 
 const TOOLCHAIN_TOML: &str = r#"

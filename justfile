@@ -31,7 +31,7 @@ check:
 
 # Generate the manifests
 manifest local="true" version="":
-    cargo run --package hummanta-manifest -- \
+    cargo run --package hmt-manifest -- \
         --path manifests --version={{version}} \
         {{ if local == "true" { "--local" } else { "" } }}
 

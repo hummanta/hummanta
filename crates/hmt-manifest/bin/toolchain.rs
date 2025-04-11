@@ -14,8 +14,8 @@
 
 use std::{collections::HashMap, fs, path::Path};
 
+use hmt_manifest::*;
 use hmt_utils::checksum::CHECKSUM_FILE_SUFFIX;
-use hummanta_manifest::*;
 
 use crate::{args::Arguments, index, HUMMANTA_GITHUB_REPO};
 

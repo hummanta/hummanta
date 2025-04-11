@@ -1,10 +1,10 @@
 [package]
-name = "hummanta-manifest"
+name = "hmt-manifest"
 version.workspace = true
 edition.workspace = true
 
 [[bin]]
-name = "hummanta-manifest-generator"
+name = "hmt-manifest"
 path = "bin/main.rs"
 
 [dependencies]
