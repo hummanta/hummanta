@@ -9,7 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 # inner dependencies
-hummanta-fetcher.workspace = true
+hmt-fetcher.workspace = true
 hummanta-manifest.workspace = true
 hmt-detection.workspace = true
 hmt-utils.workspace = true

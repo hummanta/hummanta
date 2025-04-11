@@ -10,7 +10,7 @@ edition = "2021"
 [workspace.dependencies]
 # inner dependencies
 hmt-detection = { path = "crates/hmt-detection" }
-hummanta-fetcher = { path = "crates/fetcher" }
+hmt-fetcher = { path = "crates/hmt-fetcher" }
 hummanta-manifest = { path = "crates/manifest" }
 hmt-utils = { path = "crates/hmt-utils" }
 

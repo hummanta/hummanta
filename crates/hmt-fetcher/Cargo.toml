@@ -1,5 +1,5 @@
 [package]
-name = "hummanta-fetcher"
+name = "hmt-fetcher"
 version.workspace = true
 edition.workspace = true
 

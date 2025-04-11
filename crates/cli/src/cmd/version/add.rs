@@ -18,8 +18,8 @@ use anyhow::Context as _;
 use clap::Args;
 use tokio::fs;
 
+use hmt_fetcher::{FetchContext, Fetcher};
 use hmt_utils::{archive, checksum::CHECKSUM_FILE_SUFFIX};
-use hummanta_fetcher::{FetchContext, Fetcher};
 
 use crate::{context::Context, errors::Result};
 
