@@ -1,5 +1,5 @@
 [workspace]
-default-members = ["crates/cli"]
+default-members = ["crates/hmt-cli"]
 members = ["crates/*"]
 resolver = "2"
 
