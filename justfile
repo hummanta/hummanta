@@ -29,32 +29,14 @@ check:
     just clippy
     just test
 
-# Generate the manifests
-manifest local="true" version="":
-    cargo run --package hmt-manifest -- \
-        --path manifests --version={{version}} \
-        {{ if local == "true" { "--local" } else { "" } }}
-
 # Package executables and generate checksums
 package profile="dev" target="" version="":
     cargo run --package hmt-packager -- \
         --profile={{profile}} --target={{target}} --version={{version}}
 
-# Release the project in the local environment
-release local="true" profile="dev" target="" version="":
-    just build {{profile}} {{target}}
-    just package {{profile}} {{target}} {{version}}
-    just manifest {{local}} {{version}}
-
-# Link local development build as a version
-link:
-    mkdir -p ~/.hummanta/manifests/local
-    cp -r target/artifacts/manifests/* ~/.hummanta/manifests/local
-
 # Run all commend in the local environment
 all:
+    just clean
     just check
     just build dev
     just package dev "" local
-    just manifest true local
-    just link
