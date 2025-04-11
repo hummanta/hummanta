@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use async_trait::async_trait;
-use hummanta_utils::checksum;
+use hmt_utils::checksum;
 use tokio::fs;
 
 use crate::{

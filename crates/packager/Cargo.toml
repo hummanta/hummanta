@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 # inner dependencies
-hummanta-utils.workspace = true
+hmt-utils.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true

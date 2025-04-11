@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
 
-use hummanta_utils::{
+use hmt_utils::{
     archive::archive_file,
     checksum::{self, CHECKSUM_FILE_SUFFIX},
 };

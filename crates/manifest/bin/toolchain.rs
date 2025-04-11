@@ -14,8 +14,8 @@
 
 use std::{collections::HashMap, fs, path::Path};
 
+use hmt_utils::checksum::CHECKSUM_FILE_SUFFIX;
 use hummanta_manifest::*;
-use hummanta_utils::checksum::CHECKSUM_FILE_SUFFIX;
 
 use crate::{args::Arguments, index, HUMMANTA_GITHUB_REPO};
 
@@ -129,7 +129,7 @@ async fn build(pkg: &PackageToolchain, artifact_path: &Path, args: &Arguments) -
 
 #[cfg(test)]
 mod tests {
-    use hummanta_utils::checksum::CHECKSUM_FILE_SUFFIX;
+    use hmt_utils::checksum::CHECKSUM_FILE_SUFFIX;
     use std::{
         fs::{self, File},
         io::Write,

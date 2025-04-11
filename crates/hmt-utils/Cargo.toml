@@ -1,5 +1,5 @@
 [package]
-name = "hummanta-utils"
+name = "hmt-utils"
 version.workspace = true
 edition.workspace = true
 

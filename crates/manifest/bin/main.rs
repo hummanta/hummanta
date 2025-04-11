@@ -19,7 +19,7 @@ mod toolchain;
 use clap::Parser;
 use std::fs;
 
-use hummanta_utils::{
+use hmt_utils::{
     archive::archive_dir,
     checksum::{self, CHECKSUM_FILE_SUFFIX},
 };

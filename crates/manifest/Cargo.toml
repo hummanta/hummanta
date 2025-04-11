@@ -9,7 +9,7 @@ path = "bin/main.rs"
 
 [dependencies]
 # inner dependencies
-hummanta-utils.workspace = true
+hmt-utils.workspace = true
 
 clap.workspace = true
 serde.workspace = true

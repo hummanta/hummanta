@@ -12,7 +12,7 @@ edition = "2021"
 hmt-detection = { path = "crates/hmt-detection" }
 hummanta-fetcher = { path = "crates/fetcher" }
 hummanta-manifest = { path = "crates/manifest" }
-hummanta-utils = { path = "crates/utils" }
+hmt-utils = { path = "crates/hmt-utils" }
 
 anyhow = "1.0.97"
 async-trait = "0.1.88"

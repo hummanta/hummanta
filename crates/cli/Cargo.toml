@@ -12,7 +12,7 @@ path = "src/main.rs"
 hummanta-fetcher.workspace = true
 hummanta-manifest.workspace = true
 hmt-detection.workspace = true
-hummanta-utils.workspace = true
+hmt-utils.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true

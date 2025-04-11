@@ -432,6 +432,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "hmt-utils"
+version = "0.6.1"
+dependencies = [
+ "anyhow",
+ "flate2",
+ "sha2",
+ "tar",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "http"
 version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -479,9 +491,9 @@ dependencies = [
  "clap",
  "dirs",
  "hmt-detection",
+ "hmt-utils",
  "hummanta-fetcher",
  "hummanta-manifest",
- "hummanta-utils",
  "semver",
  "serde",
  "target-triple",
@@ -497,7 +509,7 @@ name = "hummanta-fetcher"
 version = "0.6.1"
 dependencies = [
  "async-trait",
- "hummanta-utils",
+ "hmt-utils",
  "once_cell",
  "reqwest",
  "tempfile",
@@ -510,7 +522,7 @@ name = "hummanta-manifest"
 version = "0.6.1"
 dependencies = [
  "clap",
- "hummanta-utils",
+ "hmt-utils",
  "serde",
  "tempfile",
  "thiserror",
@@ -524,23 +536,11 @@ version = "0.6.1"
 dependencies = [
  "anyhow",
  "clap",
- "hummanta-utils",
+ "hmt-utils",
  "target-triple",
  "tempfile",
  "tokio",
  "walkdir",
-]
-
-[[package]]
-name = "hummanta-utils"
-version = "0.6.1"
-dependencies = [
- "anyhow",
- "flate2",
- "sha2",
- "tar",
- "tempfile",
- "tokio",
 ]
 
 [[package]]

@@ -18,9 +18,9 @@ use anyhow::Context as _;
 use clap::Args;
 use tokio::fs;
 
+use hmt_utils::archive;
 use hummanta_fetcher::{FetchContext, Fetcher};
 use hummanta_manifest::{TargetInfo, Toolchain, ToolchainManifest};
-use hummanta_utils::archive;
 
 use crate::{context::Context, errors::Result};
 
