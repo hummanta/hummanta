@@ -1,8 +1,0 @@
-[package]
-name = "solidity-detector"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-hmt-detection.workspace = true
-walkdir.workspace = true
