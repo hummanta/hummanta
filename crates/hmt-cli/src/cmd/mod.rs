@@ -30,6 +30,10 @@ use crate::{context::Context, errors::Result};
 pub struct Command {
     #[command(subcommand)]
     command: Commands,
+
+    /// Override the registry URL.
+    #[arg(long, global = true, env = "HUMMANTA_REGISTRY")]
+    registry: Option<String>,
 }
 
 #[derive(Subcommand)]

@@ -23,7 +23,7 @@ pub struct Context {
     /// The configuration for the application.
     pub config: Config,
 
-    /// The path to the configuration
+    /// The path to the configuration.
     pub config_path: PathBuf,
 }
 
@@ -67,5 +67,14 @@ impl Context {
     /// Gets the path to the manifests directory.
     pub fn manifests_dir(&self) -> PathBuf {
         self.home_dir().join("manifests")
+    }
+
+    #[allow(dead_code)]
+    /// Computes the final registry URL based on the priority:
+    /// CLI > Environment > Config > Default.
+    pub fn registry(&self, registry: Option<String>) -> String {
+        registry
+            .or_else(|| std::env::var("HUMMANTA_REGISTRY").ok())
+            .unwrap_or_else(|| self.config.registry.clone()) // 使用配置文件中的 registry
     }
 }
