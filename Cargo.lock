@@ -431,8 +431,8 @@ dependencies = [
  "dirs",
  "hmt-detection",
  "hmt-fetcher",
- "hmt-manifest",
- "hmt-utils",
+ "hmt-manifest 0.6.1 (git+https://github.com/hummanta/hummanta.git?rev=25bac55)",
+ "hmt-utils 0.6.1",
  "semver",
  "serde",
  "target-triple",
@@ -457,7 +457,7 @@ name = "hmt-fetcher"
 version = "0.6.1"
 dependencies = [
  "async-trait",
- "hmt-utils",
+ "hmt-utils 0.6.1",
  "once_cell",
  "reqwest",
  "tempfile",
@@ -470,7 +470,21 @@ name = "hmt-manifest"
 version = "0.6.1"
 dependencies = [
  "clap",
- "hmt-utils",
+ "hmt-utils 0.6.1",
+ "serde",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "toml",
+]
+
+[[package]]
+name = "hmt-manifest"
+version = "0.6.1"
+source = "git+https://github.com/hummanta/hummanta.git?rev=25bac55#25bac5542024372864363feb4e8007c4487cd741"
+dependencies = [
+ "clap",
+ "hmt-utils 0.6.1 (git+https://github.com/hummanta/hummanta.git?rev=25bac55)",
  "serde",
  "tempfile",
  "thiserror",
@@ -484,7 +498,7 @@ version = "0.6.1"
 dependencies = [
  "anyhow",
  "clap",
- "hmt-utils",
+ "hmt-utils 0.6.1",
  "target-triple",
  "tempfile",
  "tokio",
@@ -494,6 +508,19 @@ dependencies = [
 [[package]]
 name = "hmt-utils"
 version = "0.6.1"
+dependencies = [
+ "anyhow",
+ "flate2",
+ "sha2",
+ "tar",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
+name = "hmt-utils"
+version = "0.6.1"
+source = "git+https://github.com/hummanta/hummanta.git?rev=25bac55#25bac5542024372864363feb4e8007c4487cd741"
 dependencies = [
  "anyhow",
  "flate2",

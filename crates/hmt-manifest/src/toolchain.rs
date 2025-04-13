@@ -13,31 +13,20 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
+use std::collections::HashMap;
 
-use crate::{ManifestError, ManifestResult};
-
-/// `ToolchainManifest` represents the structure of a toolchain manifest file.
+/// `ToolchainManifest` maps kind -> name -> PackageIndexRef.
 ///
-/// It is structured as a nested `HashMap`, where the outer map groups toolchains by category,
-/// and the inner map associates toolchain names with their respective configurations.
+/// This structure represents a mapping from toolchain categories (`kind`)
+/// to toolchain names (`name`) and their corresponding `PackageIndexRef`.
 ///
-/// example:
+/// Example:
 /// ```toml
-/// [detector.detector1]
-///     package = "package1"
-///     bin = "bin1"
-///     targets = ["x86_64-unknown-linux-gnu"]
-/// #
-/// [compiler.compiler1]
-///     version = "1.0.0"
-/// #
-// [compiler.compiler1.targets.x86_64-unknown-linux-gnu]
-///     url = "http://example.com"
-///     hash = "hash123"
+/// [detector.solidity-detector-foundry]
+///     package-index = "https://hummanta.github.io/solidity-detector-foundry/package-index.toml"
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ToolchainManifest(HashMap<String, HashMap<String, Toolchain>>);
+pub struct ToolchainManifest(HashMap<String, HashMap<String, PackageIndexRef>>);
 
 impl ToolchainManifest {
     /// Creates a new, empty `ToolchainManifest`.
@@ -50,9 +39,9 @@ impl ToolchainManifest {
     /// # Arguments
     /// * `category` - The category name (e.g., "detector" or "compiler").
     /// * `name` - The name of the toolchain.
-    /// * `toolchain` - The toolchain to insert.
-    pub fn insert(&mut self, category: String, name: String, toolchain: Toolchain) {
-        self.0.entry(category).or_default().insert(name, toolchain);
+    /// * `index_ref` - The `PackageIndexRef` to insert.
+    pub fn insert(&mut self, category: String, name: String, index_ref: PackageIndexRef) {
+        self.0.entry(category).or_default().insert(name, index_ref);
     }
 
     /// Retrieves a toolchain for a given category and name.
@@ -62,8 +51,8 @@ impl ToolchainManifest {
     /// * `name` - The name of the toolchain.
     ///
     /// # Returns
-    /// An `Option` containing the `Toolchain` if found, or `None` otherwise.
-    pub fn get(&self, category: &str, name: &str) -> Option<&Toolchain> {
+    /// An `Option` containing the `PackageIndexRef` if found, or `None` otherwise.
+    pub fn get(&self, category: &str, name: &str) -> Option<&PackageIndexRef> {
         self.0.get(category)?.get(name)
     }
 
@@ -75,7 +64,7 @@ impl ToolchainManifest {
     /// # Returns
     /// An `Option` containing a reference to the map of toolchains for the specified category,
     /// or `None` if the category does not exist.
-    pub fn by_category(&self, category: &str) -> Option<&HashMap<String, Toolchain>> {
+    pub fn by_category(&self, category: &str) -> Option<&HashMap<String, PackageIndexRef>> {
         self.0.get(category)
     }
 
@@ -86,8 +75,8 @@ impl ToolchainManifest {
     /// * `name` - The name of the toolchain.
     ///
     /// # Returns
-    /// An `Option` containing the removed `Toolchain` if it existed, or `None` otherwise.
-    pub fn remove(&mut self, category: &str, name: &str) -> Option<Toolchain> {
+    /// An `Option` containing the removed `PackageIndexRef` if it existed, or `None` otherwise.
+    pub fn remove(&mut self, category: &str, name: &str) -> Option<PackageIndexRef> {
         self.0.get_mut(category)?.remove(name)
     }
 
@@ -107,7 +96,7 @@ impl ToolchainManifest {
     ///
     /// This iterator yields tuples where the first element is the category name
     /// and the second element is a reference to the corresponding map of toolchains.
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &HashMap<String, Toolchain>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &HashMap<String, PackageIndexRef>)> {
         self.0.iter()
     }
 
@@ -115,7 +104,7 @@ impl ToolchainManifest {
     ///
     /// This iterator yields references to the maps of toolchains, where each map
     /// corresponds to a category of toolchains.
-    pub fn values(&self) -> impl Iterator<Item = &HashMap<String, Toolchain>> {
+    pub fn values(&self) -> impl Iterator<Item = &HashMap<String, PackageIndexRef>> {
         self.0.values()
     }
 }
@@ -126,114 +115,23 @@ impl Default for ToolchainManifest {
     }
 }
 
-impl ToolchainManifest
-where
-    Self: FromStr,
-{
-    /// Read the toolchain manifest from a file.
-    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
-        let mut file = std::fs::File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
-        Self::from_str(&contents)
-    }
-
-    /// Write the toolchain manifest to a file.
-    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
-        let toml_string = toml::to_string(&self)?;
-        std::fs::write(path, toml_string)?;
-
-        Ok(())
-    }
+/// `PackageIndexRef` holds a reference to a package index file.
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct PackageIndexRef {
+    /// URL to the package index.
+    #[serde(rename = "package-index")]
+    pub package_index: String,
 }
 
-impl std::str::FromStr for ToolchainManifest {
-    type Err = ManifestError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        toml::from_str(s).map_err(ManifestError::from)
-    }
-}
-
-/// `Toolchain` is an enum that represents a toolchain configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum Toolchain {
-    Package(PackageToolchain),
-    Release(ReleaseToolchain),
-}
-
-/// `PackageToolchain` represents a toolchain defined by a package.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PackageToolchain {
-    /// The package name associated with the toolchain.
-    pub package: String,
-    /// An optional field specifying the binary name of the toolchain.
-    pub bin: Option<String>,
-    /// Specifying the target platforms for the toolchain.
-    pub targets: Vec<String>,
-}
-
-impl PackageToolchain {
-    /// Creates a new `PackageToolchain`.
-    pub fn new(package: String, bin: Option<String>, targets: Vec<String>) -> Self {
-        PackageToolchain { package, bin, targets }
-    }
-
-    // /// Retrieves the final binary name of the toolchain.
-    pub fn name(&self) -> &str {
-        self.bin.as_ref().unwrap_or(&self.package)
-    }
-}
-
-/// `ReleaseToolchain` represents a toolchain defined by a specific release version.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ReleaseToolchain {
-    /// The version of the toolchain.
-    pub version: String,
-    /// A map of target platforms to their respective `TargetInfo`.
-    pub targets: HashMap<String, TargetInfo>,
-}
-
-impl From<ReleaseToolchain> for Toolchain {
-    fn from(val: ReleaseToolchain) -> Self {
-        Toolchain::Release(val)
-    }
-}
-
-impl ReleaseToolchain {
-    /// Creates a new `ReleaseToolchain`.
-    pub fn new(version: String, targets: HashMap<String, TargetInfo>) -> Self {
-        ReleaseToolchain { version, targets }
-    }
-
-    /// Retrieves the `TargetInfo` for a specific target platform.
-    pub fn get_target_info(&self, platform: &str) -> Option<&TargetInfo> {
-        self.targets.get(platform)
-    }
-}
-
-/// `TargetInfo` represents the information for a specific target platform.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct TargetInfo {
-    /// The URL to download the toolchain for the target platform.
-    pub url: String,
-    /// The hash of the toolchain file for verification purposes.
-    pub hash: String,
-}
-
-impl TargetInfo {
-    /// Creates a new `TargetInfo`.
-    pub fn new(url: String, hash: String) -> Self {
-        Self { url, hash }
+impl PackageIndexRef {
+    /// Creates a new `PackageIndexRef`.
+    pub fn new(package_index: String) -> Self {
+        PackageIndexRef { package_index }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
-
     use super::*;
 
     #[test]
@@ -245,13 +143,9 @@ mod tests {
     #[test]
     fn test_toolchain_manifest_insert_and_get() {
         let mut manifest = ToolchainManifest::new();
-        let toolchain = Toolchain::Package(PackageToolchain::new(
-            "package1".to_string(),
-            Some("bin1".to_string()),
-            vec!["x86_64-unknown-linux-gnu".to_string()],
-        ));
+        let index_ref = PackageIndexRef::new("https://example.com/package-index.toml".to_string());
 
-        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain.clone());
+        manifest.insert("detector".to_string(), "detector1".to_string(), index_ref);
         let retrieved = manifest.get("detector", "detector1");
 
         assert!(retrieved.is_some());
@@ -260,13 +154,9 @@ mod tests {
     #[test]
     fn test_toolchain_manifest_remove() {
         let mut manifest = ToolchainManifest::new();
-        let toolchain = Toolchain::Package(PackageToolchain::new(
-            "package1".to_string(),
-            Some("bin1".to_string()),
-            vec!["x86_64-unknown-linux-gnu".to_string()],
-        ));
+        let index_ref = PackageIndexRef::new("https://example.com/package-index.toml".to_string());
 
-        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain.clone());
+        manifest.insert("detector".to_string(), "detector1".to_string(), index_ref);
         let removed = manifest.remove("detector", "detector1");
 
         assert!(removed.is_some());
@@ -276,65 +166,25 @@ mod tests {
     #[test]
     fn test_toolchain_manifest_contains() {
         let mut manifest = ToolchainManifest::new();
-        let toolchain = Toolchain::Package(PackageToolchain::new(
-            "package1".to_string(),
-            Some("bin1".to_string()),
-            vec!["x86_64-unknown-linux-gnu".to_string()],
-        ));
+        let index_ref = PackageIndexRef::new("https://example.com/package-index.toml".to_string());
 
-        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain);
+        manifest.insert("detector".to_string(), "detector1".to_string(), index_ref);
         assert!(manifest.contains("detector", "detector1"));
         assert!(!manifest.contains("detector", "nonexistent"));
     }
 
     #[test]
-    fn test_release_toolchain_get_target_info() {
-        let mut targets = HashMap::new();
-        targets.insert(
-            "x86_64-unknown-linux-gnu".to_string(),
-            TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
-        );
+    fn test_index_ref_creation() {
+        let index_ref = PackageIndexRef::new("https://example.com/package-index.toml".to_string());
 
-        let release_toolchain = ReleaseToolchain::new("1.0.0".to_string(), targets.clone());
-
-        let targets2 = release_toolchain.get_target_info("x86_64-unknown-linux-gnu");
-        assert!(targets2.is_some());
-        assert_eq!(targets2.unwrap(), targets.get("x86_64-unknown-linux-gnu").unwrap());
-
-        let nonexistent_target = release_toolchain.get_target_info("nonexistent");
-        assert!(nonexistent_target.is_none());
-    }
-
-    #[test]
-    fn test_package_toolchain_creation() {
-        let package_toolchain = PackageToolchain::new(
-            "package1".to_string(),
-            Some("bin1".to_string()),
-            vec!["x86_64-unknown-linux-gnu".to_string()],
-        );
-
-        assert_eq!(package_toolchain.package, "package1");
-        assert_eq!(package_toolchain.bin, Some("bin1".to_string()));
-        assert_eq!(package_toolchain.targets, vec!["x86_64-unknown-linux-gnu".to_string()]);
-    }
-
-    #[test]
-    fn test_target_info_creation() {
-        let target_info = TargetInfo::new("http://example.com".to_string(), "hash123".to_string());
-
-        assert_eq!(target_info.url, "http://example.com");
-        assert_eq!(target_info.hash, "hash123");
+        assert_eq!(index_ref.package_index, "https://example.com/package-index.toml");
     }
 
     #[test]
     fn test_iter_toolchain() {
         let mut manifest = ToolchainManifest::new();
-        let toolchain = Toolchain::Package(PackageToolchain::new(
-            "package1".to_string(),
-            Some("bin1".to_string()),
-            vec!["x86_64-unknown-linux-gnu".to_string()],
-        ));
-        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain);
+        let index_ref = PackageIndexRef::new("https://example.com/package-index.toml".to_string());
+        manifest.insert("detector".to_string(), "detector1".to_string(), index_ref);
 
         let mut iter = manifest.iter();
         assert!(iter.next().is_some());
@@ -344,21 +194,13 @@ mod tests {
     #[test]
     fn test_values_toolchain() {
         let mut manifest = ToolchainManifest::new();
-        let toolchain1 = Toolchain::Package(PackageToolchain::new(
-            "package1".to_string(),
-            Some("bin1".to_string()),
-            vec!["x86_64-unknown-linux-gnu".to_string()],
-        ));
-        let toolchain2 = Toolchain::Release(ReleaseToolchain::new(
-            "v1.0.0".to_string(),
-            HashMap::from([(
-                "x86_64-unknown-linux-gnu".to_string(),
-                TargetInfo::new("http://example.com".to_string(), "hash123".to_string()),
-            )]),
-        ));
+        let index_ref1 =
+            PackageIndexRef::new("https://example.com/package-index1.toml".to_string());
+        let index_ref2 =
+            PackageIndexRef::new("https://example.com/package-index2.toml".to_string());
 
-        manifest.insert("detector".to_string(), "detector1".to_string(), toolchain1);
-        manifest.insert("compiler".to_string(), "compiler1".to_string(), toolchain2);
+        manifest.insert("detector".to_string(), "detector1".to_string(), index_ref1);
+        manifest.insert("compiler".to_string(), "compiler1".to_string(), index_ref2);
 
         let values: Vec<_> = manifest.values().collect();
         assert_eq!(values.len(), 2);

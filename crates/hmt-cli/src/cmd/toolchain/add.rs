@@ -55,7 +55,7 @@ impl Command {
         let toolchain_dir = ctx.toolchains_dir().join(&version).join(&self.language);
         fs::create_dir_all(&toolchain_dir).await.context("Failed to create toolchain directory")?;
 
-        let manifest = ToolchainManifest::read(manifest_path)?;
+        let manifest = ToolchainManifest::read(&manifest_path)?;
         self.installs(&manifest, &toolchain_dir).await?;
 
         println!(

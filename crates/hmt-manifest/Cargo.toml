@@ -3,9 +3,9 @@ name = "hmt-manifest"
 version.workspace = true
 edition.workspace = true
 
-[[bin]]
-name = "hmt-manifest"
-path = "bin/main.rs"
+# [[bin]]
+# name = "hmt-manifest"
+# path = "bin/main.rs"
 
 [dependencies]
 # inner dependencies

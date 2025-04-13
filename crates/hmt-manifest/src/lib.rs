@@ -14,11 +14,13 @@
 
 mod error;
 mod index;
+mod package;
 mod project;
 mod toolchain;
 
 // Re-exports.
 pub use error::*;
 pub use index::IndexManifest;
+pub use package::*;
 pub use project::*;
 pub use toolchain::*;
