@@ -48,6 +48,44 @@ pub struct PackageIndex {
     pub versions: HashMap<String, VersionInfo>,
 }
 
+impl PackageIndex {
+    /// Create a new PackageIndex instance.
+    pub fn new(meta: PackageMeta, latest: String) -> Self {
+        PackageIndex { meta, latest, versions: HashMap::new() }
+    }
+
+    /// Add a version information to the PackageIndex.
+    ///
+    /// # Arguments
+    /// * `version` - The version number.
+    /// * `manifest_url` - The manifest file URL for this version.
+    pub fn add_version(&mut self, version: String, manifest_url: String) {
+        let version_info = VersionInfo { manifest: manifest_url };
+        self.versions.insert(version.clone(), version_info);
+        self.latest = version; // Update the latest version
+    }
+
+    /// Get information for a specified version.
+    ///
+    /// # Arguments
+    /// * `version` - The version number.
+    ///
+    /// # Returns
+    /// `Option<&VersionInfo>` - Returns the corresponding VersionInfo if the
+    /// version exists, otherwise returns None.
+    pub fn get_version(&self, version: &str) -> Option<&VersionInfo> {
+        self.versions.get(version)
+    }
+
+    /// List all versions.
+    ///
+    /// # Returns
+    /// Vec<String> - A list of all versions.
+    pub fn list_versions(&self) -> Vec<String> {
+        self.versions.keys().cloned().collect()
+    }
+}
+
 /// `PackageMeta` contains general metadata for a package.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PackageMeta {
@@ -115,6 +153,56 @@ pub struct PackageManifest {
     pub artifacts: HashMap<String, Artifact>,
 }
 
+impl PackageManifest {
+    /// Creates a new `PackageManifest` with the given package info, targets, and artifacts.
+    pub fn new(
+        package: PackageInfo,
+        targets: Vec<String>,
+        artifacts: HashMap<String, Artifact>,
+    ) -> Self {
+        PackageManifest { package, targets, artifacts }
+    }
+
+    /// Adds a target platform to the package.
+    ///
+    /// # Arguments
+    /// * `target` - The target platform to add.
+    pub fn add_target(&mut self, target: String) {
+        self.targets.push(target);
+    }
+
+    /// Adds an artifact for a specific target platform.
+    ///
+    /// # Arguments
+    /// * `target` - The target platform for which the artifact is being added.
+    /// * `artifact` - The artifact to add.
+    pub fn add_artifact(&mut self, target: String, artifact: Artifact) {
+        self.artifacts.insert(target, artifact);
+    }
+
+    /// Retrieves the artifact for a specific target platform.
+    ///
+    /// # Arguments
+    /// * `target` - The target platform for which to retrieve the artifact.
+    ///
+    /// # Returns
+    /// An `Option` containing the `Artifact` if found, or `None` otherwise.
+    pub fn get_artifact(&self, target: &str) -> Option<&Artifact> {
+        self.artifacts.get(target)
+    }
+
+    /// Checks if the package supports a specific target platform.
+    ///
+    /// # Arguments
+    /// * `target` - The target platform to check.
+    ///
+    /// # Returns
+    /// `true` if the target is supported, `false` otherwise.
+    pub fn supports_target(&self, target: &str) -> bool {
+        self.targets.contains(&target.to_string())
+    }
+}
+
 /// `PackageInfo` contains detailed information about the package itself.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PackageInfo {
@@ -135,11 +223,166 @@ pub struct PackageInfo {
 }
 
 /// `Artifact` contains the URL and hash for a specific artifact of a target platform.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Artifact {
     /// The URL to download the artifact from.
     pub url: String,
 
     /// The hash of the artifact file, used for integrity checking.
     pub hash: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_package_meta() -> PackageMeta {
+        PackageMeta {
+            name: String::from("test-package"),
+            language: String::from("Rust"),
+            kind: String::from("detector"),
+            description: Some(String::from("A test package")),
+        }
+    }
+
+    fn create_test_package_info() -> PackageInfo {
+        PackageInfo {
+            name: String::from("test-package"),
+            version: String::from("1.0.0"),
+            description: Some(String::from("A test package")),
+            language: String::from("Rust"),
+            kind: String::from("detector"),
+        }
+    }
+
+    #[test]
+    fn test_package_index_creation() {
+        let meta = create_test_package_meta();
+        let package_index = PackageIndex::new(meta, String::from("1.0.0"));
+
+        assert_eq!(package_index.latest, "1.0.0");
+        assert!(package_index.versions.is_empty());
+    }
+
+    #[test]
+    fn test_add_version() {
+        let meta = create_test_package_meta();
+        let mut package_index = PackageIndex::new(meta, String::from("1.0.0"));
+
+        package_index.add_version(
+            String::from("1.1.0"),
+            String::from("https://example.com/1.1.0/manifest.toml"),
+        );
+
+        assert_eq!(package_index.latest, "1.1.0");
+        assert!(package_index.versions.contains_key("1.1.0"));
+    }
+
+    #[test]
+    fn test_get_version() {
+        let meta = create_test_package_meta();
+        let mut package_index = PackageIndex::new(meta, String::from("1.0.0"));
+
+        package_index.add_version(
+            String::from("1.1.0"),
+            String::from("https://example.com/1.1.0/manifest.toml"),
+        );
+
+        let version_info = package_index.get_version("1.1.0");
+        assert!(version_info.is_some());
+        assert_eq!(version_info.unwrap().manifest, "https://example.com/1.1.0/manifest.toml");
+    }
+
+    #[test]
+    fn test_get_nonexistent_version() {
+        let meta = create_test_package_meta();
+        let package_index = PackageIndex::new(meta, String::from("1.0.0"));
+
+        let version_info = package_index.get_version("1.1.0");
+        assert!(version_info.is_none());
+    }
+
+    #[test]
+    fn test_package_info_creation() {
+        let package_info = create_test_package_info();
+
+        assert_eq!(package_info.name, "test-package");
+        assert_eq!(package_info.version, "1.0.0");
+        assert_eq!(package_info.description, Some(String::from("A test package")));
+        assert_eq!(package_info.language, "Rust");
+        assert_eq!(package_info.kind, "detector");
+    }
+
+    #[test]
+    fn test_artifact_creation() {
+        let artifact = Artifact {
+            url: String::from("https://example.com/artifact"),
+            hash: String::from("abc123"),
+        };
+
+        assert_eq!(artifact.url, "https://example.com/artifact");
+        assert_eq!(artifact.hash, "abc123");
+    }
+
+    #[test]
+    fn test_package_manifest_creation() {
+        let package_info = create_test_package_info();
+        let targets = vec![String::from("x86_64-unknown-linux-gnu")];
+        let artifacts = HashMap::new();
+        let package_manifest = PackageManifest::new(package_info, targets.clone(), artifacts);
+        assert_eq!(package_manifest.package.name, "test-package");
+        assert_eq!(package_manifest.targets, targets);
+    }
+
+    #[test]
+    fn test_add_target() {
+        let mut package_manifest =
+            PackageManifest::new(create_test_package_info(), vec![], HashMap::new());
+
+        package_manifest.add_target(String::from("x86_64-unknown-linux-gnu"));
+        assert!(package_manifest.targets.contains(&String::from("x86_64-unknown-linux-gnu")));
+    }
+
+    #[test]
+    fn test_add_artifact() {
+        let mut package_manifest =
+            PackageManifest::new(create_test_package_info(), vec![], HashMap::new());
+
+        let artifact = Artifact {
+            url: String::from("https://example.com/artifact"),
+            hash: String::from("abc123"),
+        };
+
+        package_manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
+        assert!(package_manifest.artifacts.contains_key("x86_64-unknown-linux-gnu"));
+    }
+
+    #[test]
+    fn test_get_artifact() {
+        let mut package_manifest =
+            PackageManifest::new(create_test_package_info(), vec![], HashMap::new());
+
+        let artifact = Artifact {
+            url: String::from("https://example.com/artifact"),
+            hash: String::from("abc123"),
+        };
+
+        package_manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
+
+        let retrieved_artifact = package_manifest.get_artifact("x86_64-unknown-linux-gnu");
+        assert!(retrieved_artifact.is_some());
+        assert_eq!(retrieved_artifact.unwrap().url, "https://example.com/artifact");
+    }
+
+    #[test]
+    fn test_supports_target() {
+        let package_manifest = PackageManifest::new(
+            create_test_package_info(),
+            vec![String::from("x86_64-unknown-linux-gnu")],
+            HashMap::new(),
+        );
+
+        assert!(package_manifest.supports_target("x86_64-unknown-linux-gnu"));
+        assert!(!package_manifest.supports_target("aarch64-unknown-linux-gnu"));
+    }
 }
