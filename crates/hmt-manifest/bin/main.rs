@@ -13,61 +13,38 @@
 // limitations under the License.
 
 mod args;
-mod index;
-mod toolchain;
+mod package;
+mod release;
 
+use anyhow::Result;
+use args::Args;
 use clap::Parser;
-use std::fs;
 
-use hmt_utils::{
-    archive::archive_dir,
-    checksum::{self, CHECKSUM_FILE_SUFFIX},
-};
-
-const HUMMANTA_GITHUB_REPO: &str = "github.com/hummanta/hummanta";
+use hmt_manifest::PackageConfig;
 
 #[tokio::main]
-async fn main() {
-    let args = args::Arguments::parse();
+async fn main() -> Result<()> {
+    let args = Args::parse();
+    let version = args.version();
 
-    // Prepare the input directory
-    let input_path = args.path.to_path_buf();
-    if !input_path.exists() {
-        eprintln!("Error: input directory {:?} does not exist.", input_path);
-        std::process::exit(1);
+    // Read package configuration
+    let config = PackageConfig::read(&args.package)?;
+
+    // Create output directory if it doesn't exist
+    std::fs::create_dir_all(&args.output_dir)?;
+
+    // Generate release manifest and write to path
+    let release = release::generate(&config, &args.artifacts_dir, &version)?;
+    release.write(args.output_dir.join(format!("release-{}.toml", version)))?;
+
+    // Update or create package manifest
+    let index_path = args.output_dir.join("index.toml");
+    if index_path.exists() {
+        package::update(&config, &index_path, &version)?;
+    } else {
+        package::create(&config, &index_path, &version)?;
     }
 
-    // Prepare the artifacts directory
-    let artifact_path = args.artifact_dir();
-    if !artifact_path.exists() {
-        eprintln!("Error: artifacts directory {:?} does not exist.", artifact_path);
-        std::process::exit(1);
-    }
-
-    // Prepare the manifest output directory
-    let output_path = artifact_path.join("manifests");
-    if !output_path.exists() {
-        fs::create_dir_all(&output_path).expect("Failed to create output directory for manifests");
-    }
-
-    // Call the toolchain generate function to handle processing.
-    println!("Generating manifests of toolchains");
-    toolchain::generate(&input_path, &artifact_path, &output_path, &args).await;
-
-    // Archive all the manifests
-    let archive_input_path = artifact_path.join("manifests");
-    let archive_name = format!("manifests-{}.tar.gz", args.version());
-    let archive_output_path = artifact_path.join(&archive_name);
-
-    archive_dir(&archive_input_path, &archive_output_path)
-        .await
-        .unwrap_or_else(|_| panic!("Failed to create archive for {:?}", archive_output_path));
-
-    // Generate checksum for the manifests archive
-    let checksum_path = artifact_path.join(format!("{}{}", &archive_name, CHECKSUM_FILE_SUFFIX));
-    checksum::generate(&archive_output_path, &checksum_path)
-        .await
-        .unwrap_or_else(|_| panic!("Failed to generate checksum for {:?}", archive_output_path));
-
-    println!("Done!");
+    println!("Manifests generated successfully!");
+    Ok(())
 }

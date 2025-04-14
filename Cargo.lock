@@ -469,6 +469,7 @@ dependencies = [
 name = "hmt-manifest"
 version = "0.6.1"
 dependencies = [
+ "anyhow",
  "clap",
  "hmt-utils 0.6.1",
  "serde",

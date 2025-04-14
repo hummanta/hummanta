@@ -51,7 +51,7 @@ impl Config {
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<()> {
-        let content = toml::to_string(self)?;
+        let content = toml::to_string_pretty(self)?;
         std::fs::write(path, content)?;
         Ok(())
     }

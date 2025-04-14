@@ -12,58 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{
-    env,
-    path::{Path, PathBuf},
-};
+use std::{env, path::PathBuf};
 
 use clap::Parser;
 
+/// Generate Hummanta-compatible package and release manifests
 #[derive(Debug, Parser)]
-pub struct Arguments {
-    /// Specify the path of the manifest directory
-    #[arg(long = "path")]
-    pub path: PathBuf,
+pub struct Args {
+    /// Path to the hmt-package.toml file
+    #[arg(long)]
+    pub package: PathBuf,
 
-    /// Generate local manifests with file paths
-    #[arg(long = "local")]
-    pub local: bool,
+    /// Directory containing built artifact tarballs and their .sha256 checksums
+    #[arg(long)]
+    pub artifacts_dir: PathBuf,
 
-    /// The version of the package (e.g., v0.1.1)
-    #[arg(long = "version")]
-    pub version: String,
+    /// Output directory for manifest files (index.toml and release-<version>.toml)
+    #[arg(long)]
+    pub output_dir: PathBuf,
+
+    /// Version to publish (overrides CARGO_PKG_VERSION)
+    #[arg(long)]
+    version: Option<String>,
 }
 
-impl Arguments {
-    // Determine the version, defaulting to CARGO_PKG_VERSION with 'v' prefix if not set
+impl Args {
+    /// Determine the version, defaulting to CARGO_PKG_VERSION with 'v' prefix if not set
     pub fn version(&self) -> String {
-        if self.version.is_empty() {
-            format!("v{}", env!("CARGO_PKG_VERSION"))
-        } else {
-            self.version.clone()
-        }
-    }
-
-    pub fn artifact_dir(&self) -> PathBuf {
-        let target_dir = env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".to_string());
-        Path::new(&target_dir).join("artifacts")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_default_version() {
-        let args = Arguments { path: PathBuf::from("."), local: false, version: String::new() };
-        assert_eq!(args.version(), format!("v{}", env!("CARGO_PKG_VERSION")));
-    }
-
-    #[test]
-    fn test_custom_version() {
-        let args =
-            Arguments { path: PathBuf::from("."), local: false, version: "v1.2.3".to_string() };
-        assert_eq!(args.version(), "v1.2.3");
+        self.version
+            .as_ref()
+            .filter(|v| !v.is_empty())
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| format!("v{}", env!("CARGO_PKG_VERSION")))
     }
 }
