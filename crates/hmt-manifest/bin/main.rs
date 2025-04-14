@@ -16,7 +16,7 @@ mod args;
 mod package;
 mod release;
 
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
 use args::Args;
 use clap::Parser;
 
@@ -28,7 +28,17 @@ async fn main() -> Result<()> {
     let version = args.version();
 
     // Read package configuration
-    let config = PackageConfig::read(&args.package)?;
+    let config = PackageConfig::read(&args.package)
+        .context(format!("Failed to read package config from file: {}", args.package.display()))?;
+
+    if !args.artifacts_dir.exists() {
+        return Err(anyhow!(
+            "Artifacts directory does not exist: {}\n
+            Please ensure you have run the build command
+            and generated the necessary artifacts.",
+            args.artifacts_dir.display()
+        ));
+    }
 
     // Create output directory if it doesn't exist
     std::fs::create_dir_all(&args.output_dir)?;
