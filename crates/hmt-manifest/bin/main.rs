@@ -33,9 +33,7 @@ async fn main() -> Result<()> {
 
     if !args.artifacts_dir.exists() {
         return Err(anyhow!(
-            "Artifacts directory does not exist: {}\n
-            Please ensure you have run the build command
-            and generated the necessary artifacts.",
+            "Artifacts directory does not exist: {}",
             args.artifacts_dir.display()
         ));
     }
