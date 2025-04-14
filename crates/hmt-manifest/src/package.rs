@@ -13,76 +13,68 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-/// `PackageIndex` keeps track of all versions of a component package.
+/// `PackageManifest` keeps track of all versions of a component package.
 ///
-/// This structure represents an index of all versions for a given package,
-/// including metadata (e.g., name, language, kind) and version information.
+/// This structure represents a manifest for a given package,
+/// including metadata (e.g., name, language, kind) and release information.
 ///
 /// Example:
 /// ```toml
-/// [meta]
+/// [package]
 /// name = "solidity-detector-foundry"
 /// language = "solidity"
 /// kind = "detector"
 /// description = "Solidity detector for Foundry projects"
 ///
-/// latest = "1.2.0"
+/// targets = [
+///   "x86_64-apple-darwin",
+///   "aarch64-apple-darwin",
+///   "x86_64-unknown-linux-gnu"
+/// ]
 ///
-/// [versions."1.2.0"]
-/// manifest = "https://github.com/hummanta/solidity-detector-foundry/releases/download/v1.2.0/manifest.toml"
+/// latest = "v1.2.0"
 ///
-/// [versions."1.1.0"]
-/// manifest = "https://github.com/hummanta/solidity-detector-foundry/releases/download/v1.1.0/manifest.toml"
+/// releases = [
+///     "release-v1.2.0.toml",
+///     "release-v1.1.0.toml"
+/// ]
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PackageIndex {
+pub struct PackageManifest {
     /// Metadata for the package, such as name, language, and kind.
-    pub meta: PackageMeta,
+    pub package: PackageMeta,
+
+    /// Supported target platforms.
+    pub targets: Vec<String>,
 
     /// The latest version of the package.
     pub latest: String,
 
-    /// A mapping of all versions to their manifest URLs.
-    pub versions: HashMap<String, VersionInfo>,
+    /// A list of all release manifest files.
+    pub releases: Vec<String>,
 }
 
-impl PackageIndex {
-    /// Create a new PackageIndex instance.
-    pub fn new(meta: PackageMeta, latest: String) -> Self {
-        PackageIndex { meta, latest, versions: HashMap::new() }
+impl PackageManifest {
+    /// Create a new PackageManifest instance.
+    pub fn new(package: PackageMeta, targets: Vec<String>, latest: String) -> Self {
+        PackageManifest { package, targets, latest, releases: Vec::new() }
     }
 
-    /// Add a version information to the PackageIndex.
+    /// Add a release to the PackageManifest.
     ///
     /// # Arguments
-    /// * `version` - The version number.
-    /// * `manifest_url` - The manifest file URL for this version.
-    pub fn add_version(&mut self, version: String, manifest_url: String) {
-        let version_info = VersionInfo { manifest: manifest_url };
-        self.versions.insert(version.clone(), version_info);
-        self.latest = version; // Update the latest version
+    /// * `release` - The release manifest file name.
+    pub fn add_release(&mut self, release: String) {
+        self.releases.push(release);
     }
 
-    /// Get information for a specified version.
-    ///
-    /// # Arguments
-    /// * `version` - The version number.
+    /// Get all releases.
     ///
     /// # Returns
-    /// `Option<&VersionInfo>` - Returns the corresponding VersionInfo if the
-    /// version exists, otherwise returns None.
-    pub fn get_version(&self, version: &str) -> Option<&VersionInfo> {
-        self.versions.get(version)
-    }
-
-    /// List all versions.
-    ///
-    /// # Returns
-    /// Vec<String> - A list of all versions.
-    pub fn list_versions(&self) -> Vec<String> {
-        self.versions.keys().cloned().collect()
+    /// &Vec<String> - A reference to the list of all releases.
+    pub fn get_releases(&self) -> &Vec<String> {
+        &self.releases
     }
 }
 
@@ -102,13 +94,6 @@ pub struct PackageMeta {
     pub description: Option<String>,
 }
 
-/// `VersionInfo` contains information about a specific version of the package.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct VersionInfo {
-    /// The URL to the manifest file for the specific version.
-    pub manifest: String,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,49 +108,47 @@ mod tests {
     }
 
     #[test]
-    fn test_package_index_creation() {
+    fn test_package_manifest_creation() {
         let meta = create_test_package_meta();
-        let package_index = PackageIndex::new(meta, String::from("1.0.0"));
+        let targets =
+            vec![String::from("x86_64-apple-darwin"), String::from("aarch64-apple-darwin")];
+        let package_manifest = PackageManifest::new(meta, targets.clone(), String::from("v1.0.0"));
 
-        assert_eq!(package_index.latest, "1.0.0");
-        assert!(package_index.versions.is_empty());
+        assert_eq!(package_manifest.latest, "v1.0.0");
+        assert_eq!(package_manifest.targets, targets);
+        assert!(package_manifest.releases.is_empty());
     }
 
     #[test]
-    fn test_add_version() {
+    fn test_add_release() {
         let meta = create_test_package_meta();
-        let mut package_index = PackageIndex::new(meta, String::from("1.0.0"));
-
-        package_index.add_version(
-            String::from("1.1.0"),
-            String::from("https://example.com/1.1.0/manifest.toml"),
+        let mut package_manifest = PackageManifest::new(
+            meta,
+            vec![String::from("x86_64-apple-darwin")],
+            String::from("v1.0.0"),
         );
 
-        assert_eq!(package_index.latest, "1.1.0");
-        assert!(package_index.versions.contains_key("1.1.0"));
+        package_manifest.add_release(String::from("release-v1.1.0.toml"));
+
+        assert_eq!(package_manifest.releases.len(), 1);
+        assert_eq!(package_manifest.releases[0], "release-v1.1.0.toml");
     }
 
     #[test]
-    fn test_get_version() {
+    fn test_get_releases() {
         let meta = create_test_package_meta();
-        let mut package_index = PackageIndex::new(meta, String::from("1.0.0"));
-
-        package_index.add_version(
-            String::from("1.1.0"),
-            String::from("https://example.com/1.1.0/manifest.toml"),
+        let mut package_manifest = PackageManifest::new(
+            meta,
+            vec![String::from("x86_64-apple-darwin")],
+            String::from("v1.0.0"),
         );
 
-        let version_info = package_index.get_version("1.1.0");
-        assert!(version_info.is_some());
-        assert_eq!(version_info.unwrap().manifest, "https://example.com/1.1.0/manifest.toml");
-    }
+        package_manifest.add_release(String::from("release-v1.1.0.toml"));
+        package_manifest.add_release(String::from("release-v1.2.0.toml"));
 
-    #[test]
-    fn test_get_nonexistent_version() {
-        let meta = create_test_package_meta();
-        let package_index = PackageIndex::new(meta, String::from("1.0.0"));
-
-        let version_info = package_index.get_version("1.1.0");
-        assert!(version_info.is_none());
+        let releases = package_manifest.get_releases();
+        assert_eq!(releases.len(), 2);
+        assert_eq!(releases[0], "release-v1.1.0.toml");
+        assert_eq!(releases[1], "release-v1.2.0.toml");
     }
 }
