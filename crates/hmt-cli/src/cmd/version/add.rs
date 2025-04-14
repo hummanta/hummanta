@@ -58,7 +58,7 @@ impl Command {
 
         // Determine which context to use based on the version comparison
         let context = if version1 >= version2 {
-            let checksum_url: String = format!("{}{}", archive_url, CHECKSUM_FILE_SUFFIX);
+            let checksum_url: String = format!("{}.{}", archive_url, CHECKSUM_FILE_SUFFIX);
             FetchContext::new(&archive_url).checksum_url(&checksum_url)
         } else {
             FetchContext::new(&archive_url)

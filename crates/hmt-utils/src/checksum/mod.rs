@@ -13,10 +13,12 @@
 // limitations under the License.
 
 mod generate;
+mod read;
 mod verify;
 
 // Re-export
 pub use generate::generate;
+pub use read::read;
 pub use verify::verify;
 
-pub const CHECKSUM_FILE_SUFFIX: &str = ".sha256";
+pub const CHECKSUM_FILE_SUFFIX: &str = "sha256";
