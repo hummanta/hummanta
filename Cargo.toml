@@ -14,7 +14,7 @@ hmt-fetcher = { path = "crates/hmt-fetcher" }
 hmt-manifest = { path = "crates/hmt-manifest" }
 hmt-utils = { path = "crates/hmt-utils" }
 
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 async-trait = "0.1.88"
 clap = { version = "4.5.35", features = ["derive", "env"] }
 dirs = "6.0.0"
