@@ -37,6 +37,15 @@ pub fn generate(
 
     for target in &config.targets {
         let artifact_name = format!("{}-{}-{}.tar.gz", config.name, version, target);
+
+        // In local development mode, we can only generate artifacts for the current platform
+        // and cannot cross-compile for other platforms, so we skip them.
+        let artifact_path = artifacts_dir.join(&artifact_name);
+        if !artifact_path.exists() {
+            eprintln!("Artifact not found: {}, skipped", artifact_path.display());
+            continue;
+        }
+
         let checksum_file = format!("{}.{}", artifact_name, CHECKSUM_FILE_SUFFIX);
         let checksum_path = artifacts_dir.join(checksum_file);
 
