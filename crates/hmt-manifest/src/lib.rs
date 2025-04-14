@@ -17,12 +17,10 @@ mod index;
 mod package;
 mod project;
 mod release;
-mod toolchain;
 
 // Re-exports.
 pub use error::*;
-pub use index::IndexManifest;
+pub use index::*;
 pub use package::*;
 pub use project::*;
 pub use release::*;
-pub use toolchain::*;
