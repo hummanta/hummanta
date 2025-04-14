@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
 
 use serde::{Deserialize, Serialize};
+
+use crate::{ManifestError, ManifestResult};
 
 /// `ReleaseManifest` describes a specific released version of a package.
 ///
@@ -82,6 +84,36 @@ impl ReleaseManifest {
     /// `true` if the target is supported, `false` otherwise.
     pub fn supports_target(&self, target: &str) -> bool {
         self.artifacts.contains_key(target)
+    }
+}
+
+impl ReleaseManifest
+where
+    Self: FromStr,
+{
+    /// Read the project manifest from a file.
+    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
+        let mut file = std::fs::File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        Self::from_str(&contents)
+    }
+
+    /// Write the project manifest to a file.
+    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
+        let toml_string = toml::to_string_pretty(&self)?;
+        std::fs::write(path, toml_string)?;
+
+        Ok(())
+    }
+}
+
+impl FromStr for ReleaseManifest {
+    type Err = ManifestError;
+
+    fn from_str(s: &str) -> ManifestResult<Self> {
+        toml::from_str(s).map_err(ManifestError::from)
     }
 }
 

@@ -51,7 +51,7 @@ where
 
     /// Write the project manifest to a file.
     pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
-        let toml_string = toml::to_string(&self)?;
+        let toml_string = toml::to_string_pretty(&self)?;
         std::fs::write(path, toml_string)?;
 
         Ok(())

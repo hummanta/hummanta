@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::{io::Read, path::Path, str::FromStr};
+
 use serde::{Deserialize, Serialize};
+
+use crate::{ManifestError, ManifestResult};
 
 /// `PackageManifest` keeps track of all versions of a component package.
 ///
@@ -78,6 +82,36 @@ impl PackageManifest {
     }
 }
 
+impl PackageManifest
+where
+    Self: FromStr,
+{
+    /// Read the project manifest from a file.
+    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
+        let mut file = std::fs::File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        Self::from_str(&contents)
+    }
+
+    /// Write the project manifest to a file.
+    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
+        let toml_string = toml::to_string_pretty(&self)?;
+        std::fs::write(path, toml_string)?;
+
+        Ok(())
+    }
+}
+
+impl FromStr for PackageManifest {
+    type Err = ManifestError;
+
+    fn from_str(s: &str) -> ManifestResult<Self> {
+        toml::from_str(s).map_err(ManifestError::from)
+    }
+}
+
 /// `PackageMeta` contains general metadata for a package.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PackageMeta {
@@ -92,6 +126,88 @@ pub struct PackageMeta {
 
     /// A description of the package (optional).
     pub description: Option<String>,
+}
+
+/// Convert PackageConfig to PackageMeta.
+impl From<&PackageConfig> for PackageMeta {
+    fn from(config: &PackageConfig) -> Self {
+        PackageMeta {
+            name: config.name.clone(),
+            language: config.language.clone(),
+            kind: config.kind.clone(),
+            description: Some(config.description.clone()),
+        }
+    }
+}
+
+/// `PackageConfig` represents the metadata defined in `hmt-package.toml`.
+///
+/// It serves as the source configuration for generating manifest files,
+/// containing essential information about the component package.
+///
+/// Example:
+/// ```toml
+/// name = "solidity-detector-foundry"
+/// repository = "https://github.com/hummanta/solidity-detector-foundry"
+/// language = "solidity"
+/// kind = "detector"
+/// description = "Solidity detector for Foundry projects"
+///
+/// targets = [
+///   "x86_64-apple-darwin",
+///   "aarch64-apple-darwin",
+///   "x86_64-unknown-linux-gnu"
+/// ]
+/// ```
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PackageConfig {
+    /// The name of the component package (also used as the artifact prefix).
+    pub name: String,
+
+    /// The GitHub repository URL (used to construct release download links).
+    pub repository: String,
+
+    /// The programming language supported by this component (e.g., "solidity", "rust").
+    pub language: String,
+
+    /// The kind of component (e.g., "detector", "compiler").
+    pub kind: String,
+
+    /// A short description of the component package.
+    pub description: String,
+
+    /// A list of supported platform targets (e.g., "x86_64-apple-darwin").
+    pub targets: Vec<String>,
+}
+
+impl PackageConfig
+where
+    Self: FromStr,
+{
+    /// Read the project manifest from a file.
+    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
+        let mut file = std::fs::File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        Self::from_str(&contents)
+    }
+
+    /// Write the project manifest to a file.
+    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
+        let toml_string = toml::to_string_pretty(&self)?;
+        std::fs::write(path, toml_string)?;
+
+        Ok(())
+    }
+}
+
+impl FromStr for PackageConfig {
+    type Err = ManifestError;
+
+    fn from_str(s: &str) -> ManifestResult<Self> {
+        toml::from_str(s).map_err(ManifestError::from)
+    }
 }
 
 #[cfg(test)]
