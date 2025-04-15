@@ -15,7 +15,7 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
 
-use crate::{error::ManifestResult, ManifestError};
+use crate::{error::ManifestResult, ManifestError, ManifestFile};
 
 /// `IndexManifest` is a struct used to represent an index manifest.
 ///
@@ -131,7 +131,10 @@ where
     }
 }
 
-impl std::str::FromStr for IndexManifest {
+/// Implement load from file and save to file
+impl ManifestFile for IndexManifest {}
+
+impl FromStr for IndexManifest {
     type Err = ManifestError;
 
     fn from_str(s: &str) -> ManifestResult<Self> {

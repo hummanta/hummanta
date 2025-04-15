@@ -16,7 +16,7 @@ use std::{collections::HashMap, path::Path};
 
 use anyhow::Result;
 
-use hmt_manifest::{Artifact, PackageConfig, ReleaseManifest};
+use hmt_manifest::{Artifact, PackageConfig, Release, ReleaseManifest};
 use hmt_utils::checksum::{self, CHECKSUM_FILE_SUFFIX};
 
 /// Generate a release manifest based on package configuration and artifacts
@@ -33,24 +33,27 @@ pub fn generate(
     artifacts_dir: &Path,
     version: &str,
 ) -> Result<ReleaseManifest> {
-    let mut manifest = ReleaseManifest::new(version.to_string(), HashMap::new());
+    let release = Release::new(version.to_string());
+    let mut manifest = ReleaseManifest::new(release, HashMap::new());
 
     for target in &config.targets {
-        let artifact_name = format!("{}-{}-{}.tar.gz", config.name, version, target);
-
-        // In local development mode, we can only generate artifacts for the current platform
-        // and cannot cross-compile for other platforms, so we skip them.
-        let artifact_path = artifacts_dir.join(&artifact_name);
-        if !artifact_path.exists() {
-            eprintln!("Artifact not found: {}, skipped", artifact_path.display());
-            continue;
-        }
+        let artifact_name = format!("{}-{}-{}.tar.gz", config.package.name, version, target);
 
         let checksum_file = format!("{}.{}", artifact_name, CHECKSUM_FILE_SUFFIX);
         let checksum_path = artifacts_dir.join(checksum_file);
 
+        // In local development mode, we can only generate artifacts for the current platform
+        // and cannot cross-compile for other platforms, so we skip them.
+        if !checksum_path.exists() {
+            eprintln!("Artifact not found: {}, skipped", artifact_name);
+            continue;
+        }
+
         let hash = checksum::read(&checksum_path)?;
-        let url = format!("{}/releases/download/{}/{}", config.repository, version, artifact_name);
+        let url = format!(
+            "{}/releases/download/{}/{}",
+            config.package.repository, version, artifact_name
+        );
 
         manifest.add_artifact(target.clone(), Artifact { url, hash });
     }

@@ -13,50 +13,31 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::{io::Read, path::Path, str::FromStr};
 
-use crate::{error::ManifestResult, ManifestError};
+use crate::{error::ManifestResult, ManifestError, ManifestFile};
 
 /// `ProjectManifest` is a struct used to represent a project-specific settings.
 ///
 /// Example:
 /// ```toml
+/// [project]
 /// language = "Solidity"
 /// ```
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ProjectManifest {
-    /// The programming language used for the source code in this project.
-    pub language: String,
+    /// Metadata for the project, such as language and build.
+    pub project: Project,
 }
 
 impl ProjectManifest {
     /// Creates a new instance with the specified language.
-    pub fn new(language: String) -> Self {
-        ProjectManifest { language }
+    pub fn new(project: Project) -> Self {
+        ProjectManifest { project }
     }
 }
 
-impl ProjectManifest
-where
-    Self: FromStr,
-{
-    /// Read the project manifest from a file.
-    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
-        let mut file = std::fs::File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
-        Self::from_str(&contents)
-    }
-
-    /// Write the project manifest to a file.
-    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
-        let toml_string = toml::to_string_pretty(&self)?;
-        std::fs::write(path, toml_string)?;
-
-        Ok(())
-    }
-}
+/// Implement load from file and save to file
+impl ManifestFile for ProjectManifest {}
 
 impl std::str::FromStr for ProjectManifest {
     type Err = ManifestError;
@@ -64,4 +45,11 @@ impl std::str::FromStr for ProjectManifest {
     fn from_str(s: &str) -> ManifestResult<Self> {
         toml::from_str(s).map_err(ManifestError::from)
     }
+}
+
+/// `Project` contains general metadata for a project.
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct Project {
+    /// The programming language used for the source code in this project.
+    pub language: String,
 }

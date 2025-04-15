@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ManifestError, ManifestResult};
+use crate::{ManifestError, ManifestFile, ManifestResult};
 
 /// `ReleaseManifest` describes a specific released version of a package.
 ///
@@ -42,8 +42,8 @@ use crate::{ManifestError, ManifestResult};
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReleaseManifest {
-    /// The version of the release.
-    pub version: String,
+    /// Metadata for the release, such as version, changelog.
+    pub release: Release,
 
     /// A mapping of target platforms to their corresponding artifacts.
     pub artifacts: HashMap<String, Artifact>,
@@ -51,8 +51,8 @@ pub struct ReleaseManifest {
 
 impl ReleaseManifest {
     /// Creates a new `ReleaseManifest` with the given version and artifacts.
-    pub fn new(version: String, artifacts: HashMap<String, Artifact>) -> Self {
-        ReleaseManifest { version, artifacts }
+    pub fn new(release: Release, artifacts: HashMap<String, Artifact>) -> Self {
+        ReleaseManifest { release, artifacts }
     }
 
     /// Adds an artifact for a specific target platform.
@@ -87,33 +87,27 @@ impl ReleaseManifest {
     }
 }
 
-impl ReleaseManifest
-where
-    Self: FromStr,
-{
-    /// Read the project manifest from a file.
-    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
-        let mut file = std::fs::File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
-        Self::from_str(&contents)
-    }
-
-    /// Write the project manifest to a file.
-    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
-        let toml_string = toml::to_string_pretty(&self)?;
-        std::fs::write(path, toml_string)?;
-
-        Ok(())
-    }
-}
+/// Implement load from file and save to file
+impl ManifestFile for ReleaseManifest {}
 
 impl FromStr for ReleaseManifest {
     type Err = ManifestError;
 
     fn from_str(s: &str) -> ManifestResult<Self> {
         toml::from_str(s).map_err(ManifestError::from)
+    }
+}
+
+/// `Release` contains general metadata for a release.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Release {
+    /// The version of the release.
+    pub version: String,
+}
+
+impl Release {
+    pub fn new(version: String) -> Self {
+        Self { version }
     }
 }
 
@@ -145,51 +139,55 @@ mod tests {
     #[test]
     fn test_release_manifest_creation() {
         let artifacts = HashMap::new();
-        let release_manifest = ReleaseManifest::new(String::from("v1.0.0"), artifacts);
-        assert_eq!(release_manifest.version, "v1.0.0");
+        let release = Release::new(String::from("v1.0.0"));
+        let manifest = ReleaseManifest::new(release, artifacts);
+        assert_eq!(manifest.release.version, "v1.0.0");
     }
 
     #[test]
     fn test_add_artifact() {
-        let mut release_manifest = ReleaseManifest::new(String::from("v1.0.0"), HashMap::new());
+        let release = Release::new(String::from("v1.0.0"));
+        let mut manifest = ReleaseManifest::new(release, HashMap::new());
 
         let artifact = Artifact {
             url: String::from("https://example.com/artifact"),
             hash: String::from("abc123"),
         };
 
-        release_manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
-        assert!(release_manifest.artifacts.contains_key("x86_64-unknown-linux-gnu"));
+        manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
+        assert!(manifest.artifacts.contains_key("x86_64-unknown-linux-gnu"));
     }
 
     #[test]
     fn test_get_artifact() {
-        let mut release_manifest = ReleaseManifest::new(String::from("v1.0.0"), HashMap::new());
+        let release = Release::new(String::from("v1.0.0"));
+        let mut manifest = ReleaseManifest::new(release, HashMap::new());
 
         let artifact = Artifact {
             url: String::from("https://example.com/artifact"),
             hash: String::from("abc123"),
         };
 
-        release_manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
+        manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
 
-        let retrieved_artifact = release_manifest.get_artifact("x86_64-unknown-linux-gnu");
+        let retrieved_artifact = manifest.get_artifact("x86_64-unknown-linux-gnu");
         assert!(retrieved_artifact.is_some());
         assert_eq!(retrieved_artifact.unwrap().url, "https://example.com/artifact");
     }
 
     #[test]
     fn test_supports_target() {
-        let mut release_manifest = ReleaseManifest::new(String::from("v1.0.0"), HashMap::new());
+        let release = Release::new(String::from("v1.0.0"));
+        let mut manifest = ReleaseManifest::new(release, HashMap::new());
 
         let artifact = Artifact {
             url: String::from("https://example.com/artifact"),
             hash: String::from("abc123"),
         };
 
-        release_manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
+        manifest.add_artifact(String::from("x86_64-unknown-linux-gnu"), artifact);
 
-        assert!(release_manifest.supports_target("x86_64-unknown-linux-gnu"));
-        assert!(!release_manifest.supports_target("aarch64-unknown-linux-gnu"));
+        assert!(manifest.supports_target("x86_64-unknown-linux-gnu"));
+        assert!(!manifest.supports_target("aarch64-unknown-linux-gnu"));
     }
 }

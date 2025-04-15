@@ -18,9 +18,32 @@ mod package;
 mod project;
 mod release;
 
+use serde::Serialize;
+use std::{io::Read, path::Path, str::FromStr};
+
 // Re-exports.
 pub use error::*;
 pub use index::*;
 pub use package::*;
 pub use project::*;
 pub use release::*;
+
+/// `ManifestFile` trait provides common file operations for manifest files.
+pub trait ManifestFile: FromStr<Err = ManifestError> + Serialize {
+    /// Load the manifest from a file.
+    fn load<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
+        let mut file = std::fs::File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        Self::from_str(&contents)
+    }
+
+    /// Save the manifest to a file.
+    fn save<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
+        let toml_string = toml::to_string_pretty(&self)?;
+        std::fs::write(path, toml_string)?;
+
+        Ok(())
+    }
+}

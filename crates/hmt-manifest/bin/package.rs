@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use anyhow::Result;
-use hmt_manifest::{PackageConfig, PackageManifest, PackageMeta};
+use hmt_manifest::{ManifestFile, Package, PackageConfig, PackageManifest};
 use std::path::Path;
 
 /// Creates a new package manifest file with the given configuration
@@ -24,15 +24,12 @@ use std::path::Path;
 /// * `version` - Initial version of the package
 pub fn create(config: &PackageConfig, path: &Path, version: &str) -> Result<()> {
     // Create a new manifest with package metadata and targets
-    let mut manifest = PackageManifest::new(
-        PackageMeta::from(config),
-        config.targets.clone(),
-        version.to_string(),
-    );
+    let mut manifest =
+        PackageManifest::new(Package::from(config), config.targets.clone(), version.to_string());
 
     // Add the initial release file
     manifest.add_release(format!("release-{}.toml", version));
-    manifest.write(path)?;
+    manifest.save(path)?;
 
     Ok(())
 }
@@ -45,10 +42,10 @@ pub fn create(config: &PackageConfig, path: &Path, version: &str) -> Result<()> 
 /// * `version` - New version to be added
 pub fn update(config: &PackageConfig, path: &Path, version: &str) -> Result<()> {
     // Read the existing manifest
-    let mut manifest = PackageManifest::read(path)?;
+    let mut manifest = PackageManifest::load(path)?;
 
     // Update package metadata and targets
-    manifest.package = PackageMeta::from(config);
+    manifest.package = Package::from(config);
     manifest.targets = config.targets.clone();
 
     // Update the latest version if the new version is higher
@@ -62,6 +59,6 @@ pub fn update(config: &PackageConfig, path: &Path, version: &str) -> Result<()> 
         manifest.add_release(release);
     }
 
-    manifest.write(path)?;
+    manifest.save(path)?;
     Ok(())
 }

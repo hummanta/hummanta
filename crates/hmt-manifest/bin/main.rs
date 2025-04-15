@@ -20,15 +20,15 @@ use anyhow::{anyhow, Context, Result};
 use args::Args;
 use clap::Parser;
 
-use hmt_manifest::PackageConfig;
+use hmt_manifest::{ManifestFile, PackageConfig};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
     let version = args.version();
 
-    // Read package configuration
-    let config = PackageConfig::read(&args.package)
+    // load package configuration
+    let config = PackageConfig::load(&args.package)
         .context(format!("Failed to read package config from file: {}", args.package.display()))?;
 
     if !args.artifacts_dir.exists() {
@@ -41,9 +41,9 @@ async fn main() -> Result<()> {
     // Create output directory if it doesn't exist
     std::fs::create_dir_all(&args.output_dir)?;
 
-    // Generate release manifest and write to path
+    // Generate release manifest and save to path
     let release = release::generate(&config, &args.artifacts_dir, &version)?;
-    release.write(args.output_dir.join(format!("release-{}.toml", version)))?;
+    release.save(args.output_dir.join(format!("release-{}.toml", version)))?;
 
     // Update or create package manifest
     let index_path = args.output_dir.join("index.toml");

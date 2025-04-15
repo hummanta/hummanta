@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{io::Read, path::Path, str::FromStr};
+use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ManifestError, ManifestResult};
+use crate::{ManifestError, ManifestFile, ManifestResult};
 
 /// `PackageManifest` keeps track of all versions of a component package.
 ///
@@ -27,6 +27,7 @@ use crate::{ManifestError, ManifestResult};
 /// ```toml
 /// [package]
 /// name = "solidity-detector-foundry"
+/// repository = "https://github.com/hummanta/solidity-detector-foundry"
 /// language = "solidity"
 /// kind = "detector"
 /// description = "Solidity detector for Foundry projects"
@@ -47,7 +48,7 @@ use crate::{ManifestError, ManifestResult};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PackageManifest {
     /// Metadata for the package, such as name, language, and kind.
-    pub package: PackageMeta,
+    pub package: Package,
 
     /// Supported target platforms.
     pub targets: Vec<String>,
@@ -61,7 +62,7 @@ pub struct PackageManifest {
 
 impl PackageManifest {
     /// Create a new PackageManifest instance.
-    pub fn new(package: PackageMeta, targets: Vec<String>, latest: String) -> Self {
+    pub fn new(package: Package, targets: Vec<String>, latest: String) -> Self {
         PackageManifest { package, targets, latest, releases: Vec::new() }
     }
 
@@ -82,27 +83,8 @@ impl PackageManifest {
     }
 }
 
-impl PackageManifest
-where
-    Self: FromStr,
-{
-    /// Read the project manifest from a file.
-    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
-        let mut file = std::fs::File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
-        Self::from_str(&contents)
-    }
-
-    /// Write the project manifest to a file.
-    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
-        let toml_string = toml::to_string_pretty(&self)?;
-        std::fs::write(path, toml_string)?;
-
-        Ok(())
-    }
-}
+/// Implement load from file and save to file
+impl ManifestFile for PackageManifest {}
 
 impl FromStr for PackageManifest {
     type Err = ManifestError;
@@ -112,11 +94,14 @@ impl FromStr for PackageManifest {
     }
 }
 
-/// `PackageMeta` contains general metadata for a package.
+/// `Package` contains general metadata for a package.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PackageMeta {
+pub struct Package {
     /// The name of the package.
     pub name: String,
+
+    /// The GitHub repository URL.
+    pub repository: String,
 
     /// The programming language used for the package.
     pub language: String,
@@ -128,14 +113,15 @@ pub struct PackageMeta {
     pub description: Option<String>,
 }
 
-/// Convert PackageConfig to PackageMeta.
-impl From<&PackageConfig> for PackageMeta {
+/// Convert PackageConfig to Meta.
+impl From<&PackageConfig> for Package {
     fn from(config: &PackageConfig) -> Self {
-        PackageMeta {
-            name: config.name.clone(),
-            language: config.language.clone(),
-            kind: config.kind.clone(),
-            description: Some(config.description.clone()),
+        Package {
+            name: config.package.name.clone(),
+            repository: config.package.repository.clone(),
+            language: config.package.language.clone(),
+            kind: config.package.kind.clone(),
+            description: config.package.description.clone(),
         }
     }
 }
@@ -147,6 +133,7 @@ impl From<&PackageConfig> for PackageMeta {
 ///
 /// Example:
 /// ```toml
+/// [package]
 /// name = "solidity-detector-foundry"
 /// repository = "https://github.com/hummanta/solidity-detector-foundry"
 /// language = "solidity"
@@ -161,46 +148,15 @@ impl From<&PackageConfig> for PackageMeta {
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PackageConfig {
-    /// The name of the component package (also used as the artifact prefix).
-    pub name: String,
-
-    /// The GitHub repository URL (used to construct release download links).
-    pub repository: String,
-
-    /// The programming language supported by this component (e.g., "solidity", "rust").
-    pub language: String,
-
-    /// The kind of component (e.g., "detector", "compiler").
-    pub kind: String,
-
-    /// A short description of the component package.
-    pub description: String,
+    /// Metadata for the package, such as name, language, and kind.
+    pub package: Package,
 
     /// A list of supported platform targets (e.g., "x86_64-apple-darwin").
     pub targets: Vec<String>,
 }
 
-impl PackageConfig
-where
-    Self: FromStr,
-{
-    /// Read the project manifest from a file.
-    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
-        let mut file = std::fs::File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
-        Self::from_str(&contents)
-    }
-
-    /// Write the project manifest to a file.
-    pub fn write<P: AsRef<Path>>(&self, path: P) -> ManifestResult<()> {
-        let toml_string = toml::to_string_pretty(&self)?;
-        std::fs::write(path, toml_string)?;
-
-        Ok(())
-    }
-}
+/// Implement load from file and save to file
+impl ManifestFile for PackageConfig {}
 
 impl FromStr for PackageConfig {
     type Err = ManifestError;
@@ -214,9 +170,10 @@ impl FromStr for PackageConfig {
 mod tests {
     use super::*;
 
-    fn create_test_package_meta() -> PackageMeta {
-        PackageMeta {
+    fn create_test_package() -> Package {
+        Package {
             name: String::from("test-package"),
+            repository: String::from("https://github.com/hummanta/solidity-detector-foundry"),
             language: String::from("Rust"),
             kind: String::from("detector"),
             description: Some(String::from("A test package")),
@@ -225,44 +182,44 @@ mod tests {
 
     #[test]
     fn test_package_manifest_creation() {
-        let meta = create_test_package_meta();
+        let package = create_test_package();
         let targets =
             vec![String::from("x86_64-apple-darwin"), String::from("aarch64-apple-darwin")];
-        let package_manifest = PackageManifest::new(meta, targets.clone(), String::from("v1.0.0"));
+        let manifest = PackageManifest::new(package, targets.clone(), String::from("v1.0.0"));
 
-        assert_eq!(package_manifest.latest, "v1.0.0");
-        assert_eq!(package_manifest.targets, targets);
-        assert!(package_manifest.releases.is_empty());
+        assert_eq!(manifest.latest, "v1.0.0");
+        assert_eq!(manifest.targets, targets);
+        assert!(manifest.releases.is_empty());
     }
 
     #[test]
     fn test_add_release() {
-        let meta = create_test_package_meta();
-        let mut package_manifest = PackageManifest::new(
-            meta,
+        let package = create_test_package();
+        let mut manifest = PackageManifest::new(
+            package,
             vec![String::from("x86_64-apple-darwin")],
             String::from("v1.0.0"),
         );
 
-        package_manifest.add_release(String::from("release-v1.1.0.toml"));
+        manifest.add_release(String::from("release-v1.1.0.toml"));
 
-        assert_eq!(package_manifest.releases.len(), 1);
-        assert_eq!(package_manifest.releases[0], "release-v1.1.0.toml");
+        assert_eq!(manifest.releases.len(), 1);
+        assert_eq!(manifest.releases[0], "release-v1.1.0.toml");
     }
 
     #[test]
     fn test_get_releases() {
-        let meta = create_test_package_meta();
-        let mut package_manifest = PackageManifest::new(
-            meta,
+        let package = create_test_package();
+        let mut manifest = PackageManifest::new(
+            package,
             vec![String::from("x86_64-apple-darwin")],
             String::from("v1.0.0"),
         );
 
-        package_manifest.add_release(String::from("release-v1.1.0.toml"));
-        package_manifest.add_release(String::from("release-v1.2.0.toml"));
+        manifest.add_release(String::from("release-v1.1.0.toml"));
+        manifest.add_release(String::from("release-v1.2.0.toml"));
 
-        let releases = package_manifest.get_releases();
+        let releases = manifest.get_releases();
         assert_eq!(releases.len(), 2);
         assert_eq!(releases[0], "release-v1.1.0.toml");
         assert_eq!(releases[1], "release-v1.2.0.toml");
