@@ -20,12 +20,12 @@ use crate::{error::ManifestResult, ManifestError, ManifestFile};
 ///
 /// Example:
 /// ```toml
-/// [project]
 /// language = "Solidity"
 /// ```
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ProjectManifest {
     /// Metadata for the project, such as language and build.
+    #[serde(flatten)]
     pub project: Project,
 }
 

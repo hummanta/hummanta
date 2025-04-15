@@ -25,7 +25,6 @@ use crate::{ManifestError, ManifestFile, ManifestResult};
 ///
 /// Example:
 /// ```toml
-/// [release]
 /// version = "v1.2.0"
 ///
 /// [artifacts.x86_64-apple-darwin]
@@ -43,6 +42,7 @@ use crate::{ManifestError, ManifestFile, ManifestResult};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReleaseManifest {
     /// Metadata for the release, such as version, changelog.
+    #[serde(flatten)]
     pub release: Release,
 
     /// A mapping of target platforms to their corresponding artifacts.

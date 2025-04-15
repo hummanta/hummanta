@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use anyhow::Result;
-use hmt_manifest::{ManifestFile, Package, PackageConfig, PackageManifest};
+use hmt_manifest::{ManifestFile, Package, PackageManifest};
 use std::path::Path;
 
 /// Creates a new package manifest file with the given configuration
@@ -22,15 +22,11 @@ use std::path::Path;
 /// * `config` - Package configuration containing metadata and targets
 /// * `path` - Path where the manifest file should be created
 /// * `version` - Initial version of the package
-pub fn create(config: &PackageConfig, path: &Path, version: &str) -> Result<()> {
-    // Create a new manifest with package metadata and targets
-    let mut manifest =
-        PackageManifest::new(Package::from(config), config.targets.clone(), version.to_string());
+pub fn create(package: &Package, path: &Path, version: &str) -> Result<()> {
+    let mut manifest = PackageManifest::new(package.clone(), version.to_string());
+    manifest.add_release(version.to_string(), format!("release-{}.toml", version));
 
-    // Add the initial release file
-    manifest.add_release(format!("release-{}.toml", version));
     manifest.save(path)?;
-
     Ok(())
 }
 
@@ -40,13 +36,12 @@ pub fn create(config: &PackageConfig, path: &Path, version: &str) -> Result<()> 
 /// * `config` - Updated package configuration
 /// * `path` - Path to the existing manifest file
 /// * `version` - New version to be added
-pub fn update(config: &PackageConfig, path: &Path, version: &str) -> Result<()> {
+pub fn update(package: &Package, path: &Path, version: &str) -> Result<()> {
     // Read the existing manifest
     let mut manifest = PackageManifest::load(path)?;
 
     // Update package metadata and targets
-    manifest.package = Package::from(config);
-    manifest.targets = config.targets.clone();
+    manifest.package = package.clone();
 
     // Update the latest version if the new version is higher
     if version > manifest.latest.as_str() {
@@ -55,8 +50,8 @@ pub fn update(config: &PackageConfig, path: &Path, version: &str) -> Result<()> 
 
     // Add new release file if it doesn't exist
     let release = format!("release-{}.toml", version);
-    if !manifest.releases.contains(&release) {
-        manifest.add_release(release);
+    if !manifest.releases.contains_key(version) {
+        manifest.add_release(version.to_string(), release);
     }
 
     manifest.save(path)?;

@@ -16,7 +16,7 @@ use std::{collections::HashMap, path::Path};
 
 use anyhow::Result;
 
-use hmt_manifest::{Artifact, PackageConfig, Release, ReleaseManifest};
+use hmt_manifest::{Artifact, Package, Release, ReleaseManifest};
 use hmt_utils::checksum::{self, CHECKSUM_FILE_SUFFIX};
 
 /// Generate a release manifest based on package configuration and artifacts
@@ -28,16 +28,12 @@ use hmt_utils::checksum::{self, CHECKSUM_FILE_SUFFIX};
 ///
 /// # Returns
 /// A Result containing the generated ReleaseManifest
-pub fn generate(
-    config: &PackageConfig,
-    artifacts_dir: &Path,
-    version: &str,
-) -> Result<ReleaseManifest> {
+pub fn generate(package: &Package, artifacts_dir: &Path, version: &str) -> Result<ReleaseManifest> {
     let release = Release::new(version.to_string());
     let mut manifest = ReleaseManifest::new(release, HashMap::new());
 
-    for target in &config.targets {
-        let artifact_name = format!("{}-{}-{}.tar.gz", config.package.name, version, target);
+    for target in &package.targets {
+        let artifact_name = format!("{}-{}-{}.tar.gz", package.name, version, target);
 
         let checksum_file = format!("{}.{}", artifact_name, CHECKSUM_FILE_SUFFIX);
         let checksum_path = artifacts_dir.join(checksum_file);
@@ -50,10 +46,7 @@ pub fn generate(
         }
 
         let hash = checksum::read(&checksum_path)?;
-        let url = format!(
-            "{}/releases/download/{}/{}",
-            config.package.repository, version, artifact_name
-        );
+        let url = format!("{}/releases/download/{}/{}", package.repository, version, artifact_name);
 
         manifest.add_artifact(target.clone(), Artifact { url, hash });
     }

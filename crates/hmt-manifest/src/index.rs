@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, io::Read, path::Path, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
 use crate::{error::ManifestResult, ManifestError, ManifestFile};
 
@@ -114,20 +114,6 @@ impl IndexManifest {
 impl Default for IndexManifest {
     fn default() -> Self {
         IndexManifest::new()
-    }
-}
-
-impl IndexManifest
-where
-    Self: FromStr,
-{
-    /// Read the index manifest from a file.
-    pub fn read<P: AsRef<Path>>(path: P) -> ManifestResult<Self> {
-        let mut file = std::fs::File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
-        Self::from_str(&contents)
     }
 }
 

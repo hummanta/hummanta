@@ -20,7 +20,7 @@ use anyhow::{anyhow, Context, Result};
 use args::Args;
 use clap::Parser;
 
-use hmt_manifest::{ManifestFile, PackageConfig};
+use hmt_manifest::{ManifestFile, Package};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -28,29 +28,26 @@ async fn main() -> Result<()> {
     let version = args.version();
 
     // load package configuration
-    let config = PackageConfig::load(&args.package)
+    let package = Package::load(&args.package)
         .context(format!("Failed to read package config from file: {}", args.package.display()))?;
 
     if !args.artifacts_dir.exists() {
-        return Err(anyhow!(
-            "Artifacts directory does not exist: {}",
-            args.artifacts_dir.display()
-        ));
+        return Err(anyhow!("Artifacts directory does not exist: {}", args.artifacts_dir.display()));
     }
 
     // Create output directory if it doesn't exist
     std::fs::create_dir_all(&args.output_dir)?;
 
     // Generate release manifest and save to path
-    let release = release::generate(&config, &args.artifacts_dir, &version)?;
+    let release = release::generate(&package, &args.artifacts_dir, &version)?;
     release.save(args.output_dir.join(format!("release-{}.toml", version)))?;
 
     // Update or create package manifest
     let index_path = args.output_dir.join("index.toml");
     if index_path.exists() {
-        package::update(&config, &index_path, &version)?;
+        package::update(&package, &index_path, &version)?;
     } else {
-        package::create(&config, &index_path, &version)?;
+        package::create(&package, &index_path, &version)?;
     }
 
     println!("Manifests generated successfully!");
