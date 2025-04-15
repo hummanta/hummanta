@@ -40,7 +40,7 @@ use crate::{ManifestError, ManifestFile, ManifestResult};
 /// latest = "v1.2.0"
 ///
 /// [releases]
-/// "v1.2.0" = "release-v1.2.0.toml",
+/// "v1.2.0" = "release-v1.2.0.toml"
 /// "v1.1.0" = "release-v1.1.0.toml"
 /// ```
 #[derive(Debug, Default, Serialize, Deserialize)]

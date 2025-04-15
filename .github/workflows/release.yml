@@ -68,12 +68,6 @@ jobs:
           path: target/artifacts
           merge-multiple: true
 
-      # Generate manifests
-      - run: rustup update stable
-      - uses: taiki-e/install-action@just
-      - name: Generate manifests
-        run: just manifest false ${{ github.ref_name }}
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
