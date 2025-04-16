@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use hmt_fetcher::errors::FetchError;
+use hmt_manifest::ManifestError;
 use std::io;
 use thiserror::Error;
 
@@ -19,8 +21,8 @@ pub type Result<T> = std::result::Result<T, RegistryError>;
 
 #[derive(Error, Debug)]
 pub enum RegistryError {
-    #[error("network error: {0}")]
-    NetworkError(#[from] reqwest::Error),
+    #[error("Fetch error: {0}")]
+    FetchError(#[from] FetchError),
 
     #[error("I/O error: {0}")]
     IoError(#[from] io::Error),
@@ -42,6 +44,9 @@ pub enum RegistryError {
 
     #[error("release version not found: {0} v{1}")]
     ReleaseNotFound(String, String),
+
+    #[error("Manifest error: {0}")]
+    ManifestError(#[from] ManifestError),
 
     #[error("other error: {0}")]
     Other(String),

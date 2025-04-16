@@ -12,9 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(unused)]
+
 use std::marker::PhantomData;
 
+use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
+
 use crate::{
+    error::Result,
     traits::{LocalStatus, PackageKind, PackageManager, RemoteMetadata},
     RegistryClient,
 };
@@ -31,33 +36,29 @@ impl<T: PackageKind> Manager<T> {
 }
 
 impl<T: PackageKind> PackageManager for Manager<T> {
-    fn add(&self, name: &str, version: Option<&str>) -> crate::error::Result<()> {
+    fn add(&self, name: &str, version: Option<&str>) -> Result<()> {
         todo!()
     }
 
-    fn remove(&self, name: &str, version: Option<&str>) -> crate::error::Result<()> {
+    fn remove(&self, name: &str, version: Option<&str>) -> Result<()> {
         todo!()
     }
 
-    fn list(&self) -> crate::error::Result<Vec<hmt_manifest::PackageManifest>> {
+    fn list(&self) -> Result<Vec<PackageManifest>> {
         todo!()
     }
 }
 
 impl<T: PackageKind> RemoteMetadata for Manager<T> {
-    fn fetch_index(&self) -> crate::error::Result<hmt_manifest::IndexManifest> {
+    fn fetch_index(&self) -> Result<IndexManifest> {
         todo!()
     }
 
-    fn fetch_package(&self, name: &str) -> crate::error::Result<hmt_manifest::PackageManifest> {
+    fn fetch_package(&self, name: &str) -> Result<PackageManifest> {
         todo!()
     }
 
-    fn fetch_release(
-        &self,
-        name: &str,
-        version: &str,
-    ) -> crate::error::Result<hmt_manifest::ReleaseManifest> {
+    fn fetch_release(&self, name: &str, version: &str) -> Result<ReleaseManifest> {
         todo!()
     }
 }
@@ -67,7 +68,7 @@ impl<T: PackageKind> LocalStatus for Manager<T> {
         todo!()
     }
 
-    fn local_versions(&self, name: &str) -> crate::error::Result<Vec<String>> {
+    fn local_versions(&self, name: &str) -> Result<Vec<String>> {
         todo!()
     }
 }
