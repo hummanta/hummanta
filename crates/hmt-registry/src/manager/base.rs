@@ -14,7 +14,10 @@
 
 use std::marker::PhantomData;
 
-use crate::{traits::PackageKind, RegistryClient};
+use crate::{
+    traits::{LocalStatus, PackageKind, PackageManager, RemoteMetadata},
+    RegistryClient,
+};
 
 pub struct Manager<T: PackageKind> {
     client: RegistryClient,
@@ -24,5 +27,47 @@ pub struct Manager<T: PackageKind> {
 impl<T: PackageKind> Manager<T> {
     pub fn new(client: RegistryClient) -> Self {
         Self { client, kind: PhantomData }
+    }
+}
+
+impl<T: PackageKind> PackageManager for Manager<T> {
+    fn add(&self, name: &str, version: Option<&str>) -> crate::error::Result<()> {
+        todo!()
+    }
+
+    fn remove(&self, name: &str, version: Option<&str>) -> crate::error::Result<()> {
+        todo!()
+    }
+
+    fn list(&self) -> crate::error::Result<Vec<hmt_manifest::PackageManifest>> {
+        todo!()
+    }
+}
+
+impl<T: PackageKind> RemoteMetadata for Manager<T> {
+    fn fetch_index(&self) -> crate::error::Result<hmt_manifest::IndexManifest> {
+        todo!()
+    }
+
+    fn fetch_package(&self, name: &str) -> crate::error::Result<hmt_manifest::PackageManifest> {
+        todo!()
+    }
+
+    fn fetch_release(
+        &self,
+        name: &str,
+        version: &str,
+    ) -> crate::error::Result<hmt_manifest::ReleaseManifest> {
+        todo!()
+    }
+}
+
+impl<T: PackageKind> LocalStatus for Manager<T> {
+    fn is_installed(&self, name: &str, version: &str) -> bool {
+        todo!()
+    }
+
+    fn local_versions(&self, name: &str) -> crate::error::Result<Vec<String>> {
+        todo!()
     }
 }

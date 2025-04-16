@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
-#![allow(unused)]
+use hmt_manifest::PackageManifest;
 
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
+use crate::error::Result;
 
-// Re-exports
-pub use client::RegistryClient;
+pub trait PackageManager {
+    fn add(&self, name: &str, version: Option<&str>) -> Result<()>;
+    fn remove(&self, name: &str, version: Option<&str>) -> Result<()>;
+    fn list(&self) -> Result<Vec<PackageManifest>>;
+}

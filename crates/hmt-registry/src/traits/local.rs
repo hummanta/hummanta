@@ -12,13 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
-#![allow(unused)]
+use crate::error::Result;
 
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
-
-// Re-exports
-pub use client::RegistryClient;
+pub trait LocalStatus {
+    fn is_installed(&self, name: &str, version: &str) -> bool;
+    fn local_versions(&self, name: &str) -> Result<Vec<String>>;
+}

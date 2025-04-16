@@ -510,6 +510,7 @@ dependencies = [
 name = "hmt-registry"
 version = "0.7.0"
 dependencies = [
+ "hmt-manifest 0.7.0",
  "reqwest",
  "thiserror",
  "toml",

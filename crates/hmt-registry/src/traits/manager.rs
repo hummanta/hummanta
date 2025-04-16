@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
-#![allow(unused)]
+use super::{LocalStatus, PackageManager, RemoteMetadata};
 
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
+pub trait Manager: PackageManager + RemoteMetadata + LocalStatus {}
 
-// Re-exports
-pub use client::RegistryClient;
+impl<T> Manager for T where T: PackageManager + RemoteMetadata + LocalStatus {}

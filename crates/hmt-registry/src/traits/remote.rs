@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
-#![allow(unused)]
+use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
 
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
+use crate::error::Result;
 
-// Re-exports
-pub use client::RegistryClient;
+pub trait RemoteMetadata {
+    fn fetch_index(&self) -> Result<IndexManifest>;
+    fn fetch_package(&self, name: &str) -> Result<PackageManifest>;
+    fn fetch_release(&self, name: &str, version: &str) -> Result<ReleaseManifest>;
+}

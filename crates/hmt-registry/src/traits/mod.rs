@@ -14,7 +14,15 @@
 
 mod client;
 mod kind;
+mod local;
+mod manager;
+mod package;
+mod remote;
 
 // Re-exports
 pub use client::Client;
 pub use kind::PackageKind;
+pub use local::LocalStatus;
+pub use manager::Manager;
+pub use package::PackageManager;
+pub use remote::RemoteMetadata;
