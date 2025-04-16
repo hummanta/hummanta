@@ -100,7 +100,7 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
             .get_releases()
             .get(version)
             .ok_or_else(|| RegistryError::ReleaseNotFound(name.to_string(), version.to_string()))?;
-        let url = format!("{}/{}", package.package.homepage.trim_end_matches('/'), path);
+        let url = format!("{}/manifests/{}", package.package.homepage.trim_end_matches('/'), path);
 
         let context = FetchContext::new(&url);
         let bytes = self.registry.fetch(&context).await?;
