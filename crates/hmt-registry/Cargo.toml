@@ -1,0 +1,9 @@
+[package]
+name = "hmt-registry"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+reqwest.workspace = true
+toml.workspace = true

@@ -12,6 +12,7 @@ edition = "2021"
 hmt-detection = { path = "crates/hmt-detection" }
 hmt-fetcher = { path = "crates/hmt-fetcher" }
 hmt-manifest = { path = "crates/hmt-manifest" }
+hmt-registry = { path = "crates/hmt-registry" }
 hmt-utils = { path = "crates/hmt-utils" }
 
 anyhow = "1.0.98"
