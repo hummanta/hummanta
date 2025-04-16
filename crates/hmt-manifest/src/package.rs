@@ -108,6 +108,9 @@ pub struct Package {
     /// The name of the package.
     pub name: String,
 
+    /// URL of the package homepage.
+    pub homepage: String,
+
     /// The GitHub repository URL.
     pub repository: String,
 
@@ -142,6 +145,7 @@ mod tests {
     fn create_test_package() -> Package {
         Package {
             name: String::from("test-package"),
+            homepage: String::from("https://hummanta.github.io/solidity-detector-foundry"),
             repository: String::from("https://github.com/hummanta/solidity-detector-foundry"),
             language: String::from("Rust"),
             kind: String::from("detector"),
