@@ -48,6 +48,9 @@ pub enum RegistryError {
     #[error("Manifest error: {0}")]
     ManifestError(#[from] ManifestError),
 
+    #[error("Failed to unpack archive: {0}")]
+    UnpackError(String),
+
     #[error("other error: {0}")]
     Other(String),
 }

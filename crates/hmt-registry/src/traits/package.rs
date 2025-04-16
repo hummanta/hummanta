@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::{future::Future, path::Path};
+
 use hmt_manifest::PackageManifest;
 
 use crate::error::Result;
 
 pub trait PackageManager {
-    fn add(&self, name: &str, version: Option<&str>) -> Result<()>;
-    fn remove(&self, name: &str, version: Option<&str>) -> Result<()>;
+    fn add(&self, name: &str, target_dir: &Path) -> impl Future<Output = Result<()>>;
+    fn remove(&self, name: &str) -> Result<()>;
     fn list(&self) -> Result<Vec<PackageManifest>>;
 }

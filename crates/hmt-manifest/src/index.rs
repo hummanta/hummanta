@@ -110,6 +110,11 @@ impl IndexManifest {
             None => Box::new(std::iter::empty()),
         }
     }
+
+    /// Returns an iterator over all (section, name) entries.
+    pub fn entries(&self) -> impl Iterator<Item = (&String, &String)> {
+        self.0.iter().flat_map(|(section, map)| map.keys().map(move |key| (section, key)))
+    }
 }
 
 impl Default for IndexManifest {

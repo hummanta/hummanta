@@ -14,11 +14,11 @@
 
 #![allow(unused)]
 
-use std::{marker::PhantomData, str::FromStr};
+use std::{marker::PhantomData, path::Path, str::FromStr};
 
 use hmt_fetcher::FetchContext;
 use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
-use hmt_utils::bytes::FromSlice;
+use hmt_utils::{archive, bytes::FromSlice};
 
 use crate::{
     error::{RegistryError, Result},
@@ -38,11 +38,37 @@ impl<T: PackageKind> Manager<T> {
 }
 
 impl<T: PackageKind> PackageManager for Manager<T> {
-    fn add(&self, name: &str, version: Option<&str>) -> Result<()> {
-        todo!()
+    async fn add(&self, name: &str, target_dir: &Path) -> Result<()> {
+        let index = self.fetch_index(name).await?;
+
+        for (category, name) in index.entries() {
+            let package = self.fetch_package(category, name).await?;
+            let release = self.fetch_release(category, name, &package.latest).await?;
+
+            if !release.supports_target(target_triple::TARGET) {
+                eprintln!("{name} does not support current target platform, skipping.");
+                continue;
+            }
+
+            let artifact = release
+                .get_artifact(target_triple::TARGET)
+                .expect("Artifact should exist if platform is supported");
+
+            // Fetch and verify the checksum
+            let context = FetchContext::new(&artifact.url).checksum(&artifact.hash);
+            let data = self.registry.fetch(&context).await?;
+
+            // Unpack the file and extract its contents to the target directory
+            archive::unpack(&data, target_dir).map_err(|e| {
+                eprintln!("ERROR: {}", e);
+                RegistryError::UnpackError(name.to_string())
+            })?;
+        }
+
+        Ok(())
     }
 
-    fn remove(&self, name: &str, version: Option<&str>) -> Result<()> {
+    fn remove(&self, name: &str) -> Result<()> {
         todo!()
     }
 
