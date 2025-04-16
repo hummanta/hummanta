@@ -12,12 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
+use super::Manager;
 
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
+use crate::traits::PackageKind;
 
-// Re-exports
-pub use client::RegistryClient;
+pub type ToolchainManager = Manager<Toolchain>;
+pub struct Toolchain;
+
+impl PackageKind for Toolchain {
+    fn index_key() -> &'static str {
+        "toolchains"
+    }
+
+    fn category_path() -> &'static str {
+        "toolchains"
+    }
+}

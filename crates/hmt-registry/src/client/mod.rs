@@ -17,7 +17,8 @@ pub mod http;
 
 use std::sync::Arc;
 
-use self::{file::FileRegistryClient, http::HTTPRegistryClient};
+use file::FileRegistryClient;
+use http::HTTPRegistryClient;
 
 use crate::traits::Client;
 

@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
-
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
+mod base;
+mod target;
+mod toolchain;
 
 // Re-exports
-pub use client::RegistryClient;
+pub use base::Manager;
+pub use target::TargetManager;
+pub use toolchain::ToolchainManager;

@@ -12,12 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
+use crate::traits::PackageKind;
 
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
+use super::Manager;
 
-// Re-exports
-pub use client::RegistryClient;
+pub type TargetManager = Manager<Target>;
+pub struct Target;
+
+impl PackageKind for Target {
+    fn index_key() -> &'static str {
+        "targets"
+    }
+
+    fn category_path() -> &'static str {
+        "targets"
+    }
+}

@@ -13,6 +13,8 @@
 // limitations under the License.
 
 mod client;
+mod kind;
 
 // Re-exports
-pub use self::client::Client;
+pub use client::Client;
+pub use kind::PackageKind;

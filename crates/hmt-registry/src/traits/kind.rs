@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(dead_code)]
-
-pub mod client;
-pub mod error;
-pub mod manager;
-pub mod traits;
-
-// Re-exports
-pub use client::RegistryClient;
+pub trait PackageKind {
+    fn index_key() -> &'static str;
+    fn category_path() -> &'static str;
+}
