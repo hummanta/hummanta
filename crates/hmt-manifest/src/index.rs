@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use hmt_utils::bytes::FromSlice;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, str::FromStr};
 
-use crate::{error::ManifestResult, ManifestError, ManifestFile};
+use crate::{ManifestError, ManifestFile};
 
 /// `IndexManifest` is a struct used to represent an index manifest.
 ///
@@ -123,7 +124,17 @@ impl ManifestFile for IndexManifest {}
 impl FromStr for IndexManifest {
     type Err = ManifestError;
 
-    fn from_str(s: &str) -> ManifestResult<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        toml::from_str(s).map_err(ManifestError::from)
+    }
+}
+
+impl FromSlice for IndexManifest {
+    type Err = ManifestError;
+
+    fn from_slice(v: &[u8]) -> Result<Self, Self::Err> {
+        let s = std::str::from_utf8(v)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
         toml::from_str(s).map_err(ManifestError::from)
     }
 }

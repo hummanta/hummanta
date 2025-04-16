@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod bytes;
-pub mod checksum;
+/// Parse a value from bytes of text.
+pub trait FromSlice: Sized {
+    /// The associated error which can be returned from parsing.
+    type Err;
+
+    /// Deserialize an instance of type `T` from bytes of text.
+    fn from_slice(v: &[u8]) -> Result<Self, Self::Err>;
+}

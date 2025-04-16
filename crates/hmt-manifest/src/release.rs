@@ -14,9 +14,10 @@
 
 use std::{collections::HashMap, str::FromStr};
 
+use hmt_utils::bytes::FromSlice;
 use serde::{Deserialize, Serialize};
 
-use crate::{ManifestError, ManifestFile, ManifestResult};
+use crate::{ManifestError, ManifestFile};
 
 /// `ReleaseManifest` describes a specific released version of a package.
 ///
@@ -93,7 +94,17 @@ impl ManifestFile for ReleaseManifest {}
 impl FromStr for ReleaseManifest {
     type Err = ManifestError;
 
-    fn from_str(s: &str) -> ManifestResult<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        toml::from_str(s).map_err(ManifestError::from)
+    }
+}
+
+impl FromSlice for ReleaseManifest {
+    type Err = ManifestError;
+
+    fn from_slice(v: &[u8]) -> Result<Self, Self::Err> {
+        let s = std::str::from_utf8(v)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
         toml::from_str(s).map_err(ManifestError::from)
     }
 }
