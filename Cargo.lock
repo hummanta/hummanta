@@ -512,6 +512,7 @@ version = "0.7.0"
 dependencies = [
  "hmt-fetcher",
  "hmt-manifest 0.7.0",
+ "hmt-utils 0.7.0",
  "thiserror",
  "toml",
 ]

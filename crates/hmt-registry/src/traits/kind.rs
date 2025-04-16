@@ -13,6 +13,5 @@
 // limitations under the License.
 
 pub trait PackageKind {
-    fn index_key() -> &'static str;
-    fn category_path() -> &'static str;
+    fn kind() -> &'static str;
 }

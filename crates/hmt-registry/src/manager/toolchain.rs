@@ -20,11 +20,7 @@ pub type ToolchainManager = Manager<Toolchain>;
 pub struct Toolchain;
 
 impl PackageKind for Toolchain {
-    fn index_key() -> &'static str {
-        "toolchains"
-    }
-
-    fn category_path() -> &'static str {
+    fn kind() -> &'static str {
         "toolchains"
     }
 }

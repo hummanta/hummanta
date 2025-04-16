@@ -13,11 +13,27 @@
 // limitations under the License.
 
 use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
+use std::future::Future;
 
 use crate::error::Result;
 
+/// Fetches index, package, and release metadata from a remote registry.
 pub trait RemoteMetadata {
-    fn fetch_index(&self) -> Result<IndexManifest>;
-    fn fetch_package(&self, name: &str) -> Result<PackageManifest>;
-    fn fetch_release(&self, name: &str, version: &str) -> Result<ReleaseManifest>;
+    /// Fetches the index manifest for the given package name.
+    fn fetch_index(&self, name: &str) -> impl Future<Output = Result<IndexManifest>>;
+
+    /// Fetches the package manifest for the given category and package name.
+    fn fetch_package(
+        &self,
+        category: &str,
+        name: &str,
+    ) -> impl Future<Output = Result<PackageManifest>>;
+
+    /// Fetches the release manifest for the specified category, name and version.
+    fn fetch_release(
+        &self,
+        category: &str,
+        name: &str,
+        version: &str,
+    ) -> impl Future<Output = Result<ReleaseManifest>>;
 }

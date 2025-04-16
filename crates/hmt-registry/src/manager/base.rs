@@ -14,24 +14,26 @@
 
 #![allow(unused)]
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, str::FromStr};
 
+use hmt_fetcher::FetchContext;
 use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
+use hmt_utils::bytes::FromSlice;
 
 use crate::{
-    error::Result,
+    error::{RegistryError, Result},
     traits::{LocalStatus, PackageKind, PackageManager, RemoteMetadata},
     RegistryClient,
 };
 
 pub struct Manager<T: PackageKind> {
-    client: RegistryClient,
+    registry: RegistryClient,
     kind: PhantomData<T>,
 }
 
 impl<T: PackageKind> Manager<T> {
-    pub fn new(client: RegistryClient) -> Self {
-        Self { client, kind: PhantomData }
+    pub fn new(registry: RegistryClient) -> Self {
+        Self { registry, kind: PhantomData }
     }
 }
 
@@ -50,16 +52,61 @@ impl<T: PackageKind> PackageManager for Manager<T> {
 }
 
 impl<T: PackageKind> RemoteMetadata for Manager<T> {
-    fn fetch_index(&self) -> Result<IndexManifest> {
-        todo!()
+    /// Fetches the index manifest for the given package name.
+    /// eg. https://hummanta.github.io/registry/toolchains/solidity.toml
+    async fn fetch_index(&self, name: &str) -> Result<IndexManifest> {
+        let index = self.registry.index().await?;
+
+        let path = index
+            .get(T::kind(), name)
+            .ok_or_else(|| RegistryError::PackageNotFound(name.to_string()))?;
+
+        let context = FetchContext::new(path);
+        let bytes = self.registry.fetch(&context).await?;
+        let manifest = IndexManifest::from_slice(&bytes)?;
+
+        Ok(manifest)
     }
 
-    fn fetch_package(&self, name: &str) -> Result<PackageManifest> {
-        todo!()
+    /// Fetches the package manifest for the given category and package name.
+    /// eg. https://hummanta.github.io/solidity-detector-foundry/manifests/index.toml
+    async fn fetch_package(&self, category: &str, name: &str) -> Result<PackageManifest> {
+        let index = self.fetch_index(name).await?;
+
+        let registry = index
+            .get(category, name)
+            .ok_or_else(|| RegistryError::PackageNotFound(name.to_string()))?
+            .trim_end_matches('/');
+        let url = format!("{registry}/manifests/index.toml");
+
+        let context = FetchContext::new(&url);
+        let bytes = self.registry.fetch(&context).await?;
+        let manifest = PackageManifest::from_slice(&bytes)?;
+
+        Ok(manifest)
     }
 
-    fn fetch_release(&self, name: &str, version: &str) -> Result<ReleaseManifest> {
-        todo!()
+    /// Fetches the release manifest for the specified category, name and version.
+    /// eg. https://hummanta.github.io/solidity-detector-foundry/manifests/release-v1.0.0.toml
+    async fn fetch_release(
+        &self,
+        category: &str,
+        name: &str,
+        version: &str,
+    ) -> Result<ReleaseManifest> {
+        let package = self.fetch_package(category, name).await?;
+
+        let path = package
+            .get_releases()
+            .get(version)
+            .ok_or_else(|| RegistryError::ReleaseNotFound(name.to_string(), version.to_string()))?;
+        let url = format!("{}/{}", package.package.homepage.trim_end_matches('/'), path);
+
+        let context = FetchContext::new(&url);
+        let bytes = self.registry.fetch(&context).await?;
+        let manifest = ReleaseManifest::from_slice(&bytes)?;
+
+        Ok(manifest)
     }
 }
 

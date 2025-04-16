@@ -20,11 +20,7 @@ pub type TargetManager = Manager<Target>;
 pub struct Target;
 
 impl PackageKind for Target {
-    fn index_key() -> &'static str {
-        "targets"
-    }
-
-    fn category_path() -> &'static str {
+    fn kind() -> &'static str {
         "targets"
     }
 }
