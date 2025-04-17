@@ -25,7 +25,7 @@ use clap::Args;
 
 use hmt_detection::DetectResult;
 use hmt_manifest::{ManifestFile, PackageEntry, Project, ProjectManifest};
-use hmt_registry::{manager::ToolchainManager, traits::Query, RegistryClient};
+use hmt_registry::traits::Query;
 
 use crate::{context::Context, errors::Result};
 
@@ -34,10 +34,12 @@ use crate::{context::Context, errors::Result};
 pub struct Command {}
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        // Acquires the toolchain manager.
+        let manager = ctx.toolchains().await?;
+        let manager = manager.read().await;
+
         // Get all detectors
-        let registry = RegistryClient::new(&ctx.registry(None));
-        let manager = ToolchainManager::new(registry, ctx.home_dir());
         let detectors = manager.by_category("detector");
 
         // Execute detectors and find matching languages

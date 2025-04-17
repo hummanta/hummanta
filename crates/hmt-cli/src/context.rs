@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use anyhow::Context as _;
+use hmt_registry::{manager::ToolchainManager, RegistryClient};
+use tokio::sync::{OnceCell, RwLock};
 
 use crate::{config::Config, errors::Result};
 
@@ -25,11 +27,17 @@ pub struct Context {
 
     /// The path to the configuration.
     pub config_path: PathBuf,
+
+    /// Overridden registry URL
+    registry: Option<String>,
+
+    /// Lazily initialized toolchain manager
+    toolchain_manager: OnceCell<Arc<RwLock<ToolchainManager>>>,
 }
 
 impl Context {
     /// Creates a new context with loaded configuration
-    pub fn new() -> Result<Self> {
+    pub fn new(registry: &Option<String>) -> Result<Self> {
         let home_dir = dirs::home_dir()
             .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
             .join(".hummanta");
@@ -43,7 +51,12 @@ impl Context {
         let config_path = home_dir.join("config.toml");
         let config = Config::load(&config_path)?;
 
-        Ok(Self { config, config_path })
+        Ok(Self {
+            config,
+            config_path,
+            registry: registry.clone(),
+            toolchain_manager: OnceCell::new(),
+        })
     }
 
     /// Gets the path to the Hummanta home directory.
@@ -53,9 +66,21 @@ impl Context {
 
     /// Computes the final registry URL based on the priority:
     /// CLI > Environment > Config > Default.
-    pub fn registry(&self, registry: Option<String>) -> String {
-        registry
+    fn registry(&self) -> String {
+        self.registry
+            .clone()
             .or_else(|| std::env::var("HUMMANTA_REGISTRY").ok())
-            .unwrap_or_else(|| self.config.registry.clone()) // 使用配置文件中的 registry
+            .unwrap_or_else(|| self.config.registry.clone())
+    }
+
+    /// Gets the toolchain manager, initializing it if necessary
+    pub async fn toolchains(&self) -> Result<Arc<RwLock<ToolchainManager>>> {
+        self.toolchain_manager
+            .get_or_try_init(|| async {
+                let registry = RegistryClient::new(&self.registry());
+                Ok(Arc::new(RwLock::new(ToolchainManager::new(registry, self.home_dir()))))
+            })
+            .await
+            .cloned()
     }
 }

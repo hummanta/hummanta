@@ -32,7 +32,7 @@ pub struct Command {
 
     /// Override the registry URL.
     #[arg(long, global = true, env = "HUMMANTA_REGISTRY")]
-    registry: Option<String>,
+    pub registry: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -49,7 +49,7 @@ impl Command {
         match &self.command {
             Commands::Build(cmd) => cmd.exec(ctx),
             Commands::Compile(cmd) => cmd.exec(ctx),
-            Commands::Init(cmd) => cmd.exec(ctx),
+            Commands::Init(cmd) => cmd.exec(ctx).await,
             Commands::Target(cmd) => cmd.exec(ctx),
             Commands::Toolchain(cmd) => cmd.exec(ctx).await,
         }

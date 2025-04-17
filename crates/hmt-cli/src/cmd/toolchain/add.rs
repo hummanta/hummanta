@@ -15,7 +15,7 @@
 use std::sync::Arc;
 
 use clap::Args;
-use hmt_registry::{manager::ToolchainManager, traits::PackageManager, RegistryClient};
+use hmt_registry::traits::PackageManager;
 
 use crate::{context::Context, errors::Result};
 
@@ -28,8 +28,9 @@ pub struct Command {
 
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let registry = RegistryClient::new(&ctx.registry(None));
-        let mut manager = ToolchainManager::new(registry, ctx.home_dir());
+        // Acquires the toolchain manager.
+        let manager = ctx.toolchains().await?;
+        let mut manager = manager.write().await;
 
         manager.add(&self.language).await?;
         println!("Successfully installed {} toolchains", self.language);

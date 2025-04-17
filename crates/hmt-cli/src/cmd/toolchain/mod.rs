@@ -39,8 +39,8 @@ impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
             Commands::Add(cmd) => cmd.exec(ctx).await,
-            Commands::Remove(cmd) => cmd.exec(ctx),
-            Commands::List(cmd) => cmd.exec(ctx),
+            Commands::Remove(cmd) => cmd.exec(ctx).await,
+            Commands::List(cmd) => cmd.exec(ctx).await,
         }
     }
 }

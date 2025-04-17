@@ -14,7 +14,7 @@
 
 use clap::Args;
 use hmt_manifest::DomainMap;
-use hmt_registry::{manager::ToolchainManager, traits::PackageManager, RegistryClient};
+use hmt_registry::traits::PackageManager;
 use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
@@ -24,9 +24,10 @@ use crate::{context::Context, errors::Result};
 pub struct Command {}
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let registry = RegistryClient::new(&ctx.registry(None));
-        let manager = ToolchainManager::new(registry, ctx.home_dir());
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        // Acquires the toolchain manager.
+        let manager = ctx.toolchains().await?;
+        let manager = manager.read().await;
 
         if let Some(domains) = manager.list() {
             self.print_domain_packages(domains);

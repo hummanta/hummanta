@@ -30,8 +30,10 @@ use tracing::error;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
-    let ctx = Arc::new(Context::new()?);
-    if let Err(err) = Command::parse().exec(ctx).await {
+    let cmd = Command::parse();
+    let ctx = Context::new(&cmd.registry)?;
+
+    if let Err(err) = cmd.exec(Arc::new(ctx)).await {
         error!("{}", err);
         std::process::exit(1);
     }

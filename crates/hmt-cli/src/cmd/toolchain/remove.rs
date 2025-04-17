@@ -14,7 +14,7 @@
 
 use anyhow::Ok;
 use clap::Args;
-use hmt_registry::{manager::ToolchainManager, traits::PackageManager, RegistryClient};
+use hmt_registry::traits::PackageManager;
 use std::sync::Arc;
 
 use crate::{context::Context, errors::Result, utils::confirm};
@@ -31,15 +31,16 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         // Confirm removal with user (unless force flag is set)
         if !self.force && !confirm("Are you sure you want to continue? [y/N]")? {
             println!("Removal cancelled");
             return Ok(());
         }
 
-        let registry = RegistryClient::new(&ctx.registry(None));
-        let mut manager = ToolchainManager::new(registry, ctx.home_dir());
+        // Acquires the toolchain manager.
+        let manager = ctx.toolchains().await?;
+        let mut manager = manager.write().await;
 
         // Execute the removal
         manager.remove(&self.language)?;
