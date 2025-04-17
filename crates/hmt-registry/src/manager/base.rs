@@ -21,7 +21,9 @@ use std::{
 };
 
 use hmt_fetcher::FetchContext;
-use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
+use hmt_manifest::{
+    Entry, IndexManifest, InstalledManifest, ManifestFile, PackageManifest, ReleaseManifest,
+};
 use hmt_utils::{archive, bytes::FromSlice};
 
 use crate::{
@@ -30,36 +32,62 @@ use crate::{
     RegistryClient,
 };
 
+/// A generic manager for handling package operations,
+/// with a registry client, cache, and installation root.
 pub struct Manager<T: PackageKind> {
+    /// The registry client used for interacting with the registry.
     registry: RegistryClient,
+    /// The cache of installed manifests.
+    cache: InstalledManifest,
+    /// The root path where packages are installed.
     install_root: PathBuf,
+    /// A marker type used to specify the package kind.
     _marker: PhantomData<T>,
 }
 
 impl<T: PackageKind> Manager<T> {
+    /// Creates a new package manager with the given registry client
+    /// and install root, loading or initializing the cache.
     pub fn new(registry: RegistryClient, install_root: PathBuf) -> Self {
-        Self { registry, install_root, _marker: PhantomData }
+        let path = install_root.join("installed.toml");
+        let cache = match InstalledManifest::load(path) {
+            Ok(manifest) => manifest,
+            Err(_) => InstalledManifest::new(),
+        };
+
+        Self { registry, cache, install_root, _marker: PhantomData }
     }
 
-    fn install_path(&self, name: &str) -> PathBuf {
-        self.install_root.join(T::kind()).join(name)
+    /// Returns the installation path for a package with the given domain.
+    fn install_path(&self, domain: &str) -> PathBuf {
+        self.install_root.join(T::kind()).join(domain)
+    }
+
+    /// Returns the path to the installed manifest cache file.
+    fn cache_path(&self) -> PathBuf {
+        self.install_root.join("installed.toml")
     }
 }
 
 impl<T: PackageKind> PackageManager for Manager<T> {
-    async fn add(&self, name: &str) -> Result<()> {
-        let index = self.fetch_index(name).await?;
-        let install_path = self.install_path(name);
+    /// Add a package to the system and update the cache.
+    async fn add(&mut self, domain: &str) -> Result<()> {
+        let index = self.fetch_index(domain).await?;
+        let install_path = self.install_path(domain);
 
+        // Iterate over the index entries to fetch and install packages
         for (category, name) in index.entries() {
             let package = self.fetch_package(category, name).await?;
-            let release = self.fetch_release(category, name, &package.latest).await?;
+            let version = package.latest.clone();
+            let release = self.fetch_release(category, name, &version).await?;
 
+            // Skip the package if it doesn't support the current target platform
             if !release.supports_target(target_triple::TARGET) {
                 eprintln!("{name} does not support current target platform, skipping.");
                 continue;
             }
 
+            // Get the appropriate artifact for the target platform
             let artifact = release
                 .get_artifact(target_triple::TARGET)
                 .expect("Artifact should exist if platform is supported");
@@ -73,12 +101,17 @@ impl<T: PackageKind> PackageManager for Manager<T> {
                 eprintln!("ERROR: {}", e);
                 RegistryError::UnpackError(name.to_string())
             })?;
+
+            // Now, update cache to reflect the new installation
+            let entry = Entry::new(version, package.package.description.clone());
+            self.cache.insert(T::kind(), domain, category, name, entry);
+            self.cache.save(self.cache_path())?;
         }
 
         Ok(())
     }
 
-    fn remove(&self, name: &str) -> Result<()> {
+    fn remove(&mut self, domain: &str) -> Result<()> {
         todo!()
     }
 

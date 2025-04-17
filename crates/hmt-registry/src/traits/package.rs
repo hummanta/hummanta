@@ -18,8 +18,15 @@ use hmt_manifest::PackageManifest;
 
 use crate::error::Result;
 
+/// A trait for managing package operations,
+/// including adding, removing, and listing package manifests.
 pub trait PackageManager {
-    fn add(&self, name: &str) -> impl Future<Output = Result<()>>;
-    fn remove(&self, name: &str) -> Result<()>;
+    /// Adds a package identified by the given domain.
+    fn add(&mut self, domain: &str) -> impl Future<Output = Result<()>>;
+
+    /// Removes a package identified by the given domain.
+    fn remove(&mut self, domain: &str) -> Result<()>;
+
+    /// Lists all packages managed by the package manager.
     fn list(&self) -> Result<Vec<PackageManifest>>;
 }

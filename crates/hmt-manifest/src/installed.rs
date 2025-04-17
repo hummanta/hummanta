@@ -25,6 +25,13 @@ pub struct Entry {
     pub description: Option<String>,
 }
 
+impl Entry {
+    /// Create a new, empty Entry.
+    pub fn new(version: String, description: Option<String>) -> Self {
+        Self { version, description }
+    }
+}
+
 /// Maps a package name (e.g., "solidity-detector-foundry") to its metadata.
 type PackageMap = HashMap<String, Entry>;
 
