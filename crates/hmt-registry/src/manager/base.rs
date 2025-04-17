@@ -22,7 +22,7 @@ use std::{
 
 use hmt_fetcher::FetchContext;
 use hmt_manifest::{
-    DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, PackageManifest,
+    DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, Package, PackageManifest,
     ReleaseManifest,
 };
 use hmt_utils::{archive, bytes::FromSlice};
@@ -78,11 +78,11 @@ impl<T: PackageKind> PackageManager for Manager<T> {
 
         // Iterate over the index entries to fetch and install packages
         for (category, name) in index.entries() {
-            let package = self.fetch_package(category, name).await?;
-            let version = package.latest.clone();
-            let release = self.fetch_release(category, name, &version).await?;
+            let package = self.fetch_package(&index, category, name).await?;
 
-            // Skip the package if it doesn't support the current target platform
+            // Fetch the release manifest by latest version.
+            let version = &package.latest;
+            let release = self.fetch_release(&package, version).await?;
             if !release.supports_target(target_triple::TARGET) {
                 eprintln!("{name} does not support current target platform, skipping.");
                 continue;
@@ -104,7 +104,8 @@ impl<T: PackageKind> PackageManager for Manager<T> {
             })?;
 
             // Now, update cache to reflect the new installation
-            let entry = Entry::new(version, package.package.description.clone());
+            let description = &package.package.description;
+            let entry = Entry::new(version.to_string(), description.clone());
             self.cache.insert(T::kind(), domain, category, name, entry);
             self.cache.save(self.cache_path())?;
         }
@@ -139,14 +140,14 @@ impl<T: PackageKind> PackageManager for Manager<T> {
 }
 
 impl<T: PackageKind> RemoteMetadata for Manager<T> {
-    /// Fetches the index manifest for the given package name.
+    /// Fetches the index manifest for the given domain.
     /// eg. https://hummanta.github.io/registry/toolchains/solidity.toml
-    async fn fetch_index(&self, name: &str) -> Result<IndexManifest> {
+    async fn fetch_index(&self, domain: &str) -> Result<IndexManifest> {
         let index = self.registry.index().await?;
 
         let path = index
-            .get(T::kind(), name)
-            .ok_or_else(|| RegistryError::PackageNotFound(name.to_string()))?;
+            .get(T::kind(), domain)
+            .ok_or_else(|| RegistryError::DomainNotFound(domain.to_string()))?;
 
         let context = FetchContext::new(path);
         let bytes = self.registry.fetch(&context).await?;
@@ -157,9 +158,12 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
 
     /// Fetches the package manifest for the given category and package name.
     /// eg. https://hummanta.github.io/solidity-detector-foundry/manifests/index.toml
-    async fn fetch_package(&self, category: &str, name: &str) -> Result<PackageManifest> {
-        let index = self.fetch_index(name).await?;
-
+    async fn fetch_package(
+        &self,
+        index: &IndexManifest,
+        category: &str,
+        name: &str,
+    ) -> Result<PackageManifest> {
         let registry = index
             .get(category, name)
             .ok_or_else(|| RegistryError::PackageNotFound(name.to_string()))?
@@ -173,16 +177,14 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
         Ok(manifest)
     }
 
-    /// Fetches the release manifest for the specified category, name and version.
+    /// Fetches the release manifest for the specified version.
     /// eg. https://hummanta.github.io/solidity-detector-foundry/manifests/release-v1.0.0.toml
     async fn fetch_release(
         &self,
-        category: &str,
-        name: &str,
+        package: &PackageManifest,
         version: &str,
     ) -> Result<ReleaseManifest> {
-        let package = self.fetch_package(category, name).await?;
-
+        let name = &package.package.name;
         let path = package
             .get_releases()
             .get(version)

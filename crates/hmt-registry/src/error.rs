@@ -39,6 +39,9 @@ pub enum RegistryError {
     #[error("unsupported registry protocol: {0}")]
     UnsupportedProtocol(String),
 
+    #[error("domain not found: {0}")]
+    DomainNotFound(String),
+
     #[error("package not found: {0}")]
     PackageNotFound(String),
 

@@ -19,21 +19,21 @@ use crate::error::Result;
 
 /// Fetches index, package, and release metadata from a remote registry.
 pub trait RemoteMetadata {
-    /// Fetches the index manifest for the given package name.
-    fn fetch_index(&self, name: &str) -> impl Future<Output = Result<IndexManifest>>;
+    /// Fetches the index manifest for the given domain.
+    fn fetch_index(&self, domain: &str) -> impl Future<Output = Result<IndexManifest>>;
 
     /// Fetches the package manifest for the given category and package name.
     fn fetch_package(
         &self,
+        index: &IndexManifest,
         category: &str,
         name: &str,
     ) -> impl Future<Output = Result<PackageManifest>>;
 
-    /// Fetches the release manifest for the specified category, name and version.
+    /// Fetches the release manifest for the specified version.
     fn fetch_release(
         &self,
-        category: &str,
-        name: &str,
+        package: &PackageManifest,
         version: &str,
     ) -> impl Future<Output = Result<ReleaseManifest>>;
 }
