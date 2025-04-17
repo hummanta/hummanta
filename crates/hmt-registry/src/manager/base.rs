@@ -112,7 +112,23 @@ impl<T: PackageKind> PackageManager for Manager<T> {
     }
 
     fn remove(&mut self, domain: &str) -> Result<()> {
-        todo!()
+        // Determine the installation path for the given domain.
+        let install_path = self.install_path(domain);
+
+        // If the installation directory exists, remove it recursively.
+        if install_path.exists() {
+            std::fs::remove_dir_all(&install_path).map_err(|e| {
+                eprintln!("Failed to remove installation directory for '{domain}': {e}");
+                RegistryError::RemoveError(domain.to_string())
+            })?;
+        }
+
+        // Remove all cached entries under the given domain,
+        // and save the updated cache back to disk.
+        self.cache.remove_domain(T::kind(), domain);
+        self.cache.save(self.cache_path())?;
+
+        Ok(())
     }
 
     fn list(&self) -> Result<Vec<PackageManifest>> {

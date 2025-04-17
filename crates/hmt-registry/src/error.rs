@@ -51,6 +51,9 @@ pub enum RegistryError {
     #[error("Failed to unpack archive: {0}")]
     UnpackError(String),
 
+    #[error("Failed to remove installation directory for '{0}")]
+    RemoveError(String),
+
     #[error("other error: {0}")]
     Other(String),
 }

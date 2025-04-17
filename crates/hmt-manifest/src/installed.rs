@@ -116,6 +116,13 @@ impl InstalledManifest {
     pub fn get_package(&self, kind: &str, domain: &str, cat: &str) -> Option<&PackageMap> {
         self.0.get(kind)?.get(domain)?.get(cat)
     }
+
+    /// Remove all packages under a specific kind and domain.
+    pub fn remove_domain(&mut self, kind: &str, domain: &str) {
+        if let Some(kind_map) = self.0.get_mut(kind) {
+            kind_map.remove(domain);
+        }
+    }
 }
 
 /// Implement load from file and save to file
