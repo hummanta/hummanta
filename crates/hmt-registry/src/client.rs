@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{io, str::FromStr};
-
 use hmt_fetcher::{FetchContext, Fetcher};
 use hmt_manifest::IndexManifest;
+use hmt_utils::bytes::FromSlice;
 
 use crate::error::{RegistryError, Result};
 
@@ -40,11 +39,8 @@ impl RegistryClient {
     /// Fetches and parses the index manifest from the registry.
     pub async fn index(&self) -> Result<IndexManifest> {
         let context = FetchContext::new("index.toml");
-
-        let manifest = IndexManifest::from_str(
-            std::str::from_utf8(&self.fetch(&context).await?)
-                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?,
-        )?;
+        let bytes = self.fetcher.fetch(&context).await?;
+        let manifest = IndexManifest::from_slice(&bytes)?;
 
         Ok(manifest)
     }
