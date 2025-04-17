@@ -14,7 +14,7 @@
 
 use std::future::Future;
 
-use hmt_manifest::PackageManifest;
+use hmt_manifest::DomainMap;
 
 use crate::error::Result;
 
@@ -27,6 +27,6 @@ pub trait PackageManager {
     /// Removes a package identified by the given domain.
     fn remove(&mut self, domain: &str) -> Result<()>;
 
-    /// Lists all packages managed by the package manager.
-    fn list(&self) -> Result<Vec<PackageManifest>>;
+    /// Return all installed packages under the current kind.
+    fn list(&self) -> Option<&DomainMap>;
 }

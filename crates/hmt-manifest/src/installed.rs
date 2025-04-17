@@ -33,16 +33,16 @@ impl Entry {
 }
 
 /// Maps a package name (e.g., "solidity-detector-foundry") to its metadata.
-type PackageMap = HashMap<String, Entry>;
+pub type PackageMap = HashMap<String, Entry>;
 
 /// Maps category names (e.g., "detector", "compiler") to packages.
-type CategoryMap = HashMap<String, PackageMap>;
+pub type CategoryMap = HashMap<String, PackageMap>;
 
 /// Maps domain names (e.g., "solidity", "move") to category maps.
-type DomainMap = HashMap<String, CategoryMap>;
+pub type DomainMap = HashMap<String, CategoryMap>;
 
 /// Maps kind names (e.g., "toolchains", "targets") to domain maps.
-type KindMap = HashMap<String, DomainMap>;
+pub type KindMap = HashMap<String, DomainMap>;
 
 /// Represents the full set of installed toolchains and targets.
 ///

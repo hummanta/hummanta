@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{LocalStatus, PackageManager, RemoteMetadata};
+use super::{PackageManager, RemoteMetadata};
 
-pub trait Manager: PackageManager + RemoteMetadata + LocalStatus {}
+pub trait Manager: PackageManager + RemoteMetadata {}
 
-impl<T> Manager for T where T: PackageManager + RemoteMetadata + LocalStatus {}
+impl<T> Manager for T where T: PackageManager + RemoteMetadata {}

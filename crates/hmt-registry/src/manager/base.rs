@@ -22,13 +22,14 @@ use std::{
 
 use hmt_fetcher::FetchContext;
 use hmt_manifest::{
-    Entry, IndexManifest, InstalledManifest, ManifestFile, PackageManifest, ReleaseManifest,
+    DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, PackageManifest,
+    ReleaseManifest,
 };
 use hmt_utils::{archive, bytes::FromSlice};
 
 use crate::{
     error::{RegistryError, Result},
-    traits::{LocalStatus, PackageKind, PackageManager, RemoteMetadata},
+    traits::{PackageKind, PackageManager, RemoteMetadata},
     RegistryClient,
 };
 
@@ -131,8 +132,9 @@ impl<T: PackageKind> PackageManager for Manager<T> {
         Ok(())
     }
 
-    fn list(&self) -> Result<Vec<PackageManifest>> {
-        todo!()
+    /// Return all installed packages under the current kind.
+    fn list(&self) -> Option<&DomainMap> {
+        self.cache.get_domain(T::kind())
     }
 }
 
@@ -192,15 +194,5 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
         let manifest = ReleaseManifest::from_slice(&bytes)?;
 
         Ok(manifest)
-    }
-}
-
-impl<T: PackageKind> LocalStatus for Manager<T> {
-    fn is_installed(&self, name: &str, version: &str) -> bool {
-        todo!()
-    }
-
-    fn local_versions(&self, name: &str) -> Result<Vec<String>> {
-        todo!()
     }
 }
