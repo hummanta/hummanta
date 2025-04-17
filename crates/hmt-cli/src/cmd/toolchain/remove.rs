@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use anyhow::Ok;
 use clap::Args;
-use std::{fs, path::PathBuf, sync::Arc};
+use hmt_registry::{manager::ToolchainManager, traits::PackageManager, RegistryClient};
+use std::sync::Arc;
 
 use crate::{context::Context, errors::Result, utils::confirm};
 
@@ -23,14 +25,6 @@ pub struct Command {
     /// The language to remove the toolchain for.
     language: String,
 
-    /// Specific version to remove (default: current active version)
-    #[arg(short, long)]
-    version: Option<String>,
-
-    /// Remove all versions of this toolchain
-    #[arg(short, long)]
-    all: bool,
-
     /// Skip confirmation prompt
     #[arg(short, long)]
     force: bool,
@@ -38,76 +32,18 @@ pub struct Command {
 
 impl Command {
     pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let toolchains_dir = ctx.toolchains_dir();
-
-        let versions = self.resolve_versions(&ctx)?;
-        let mut toolchains = Vec::new();
-
-        // Finds all toolchain directories matching the removal criteria
-        for version in versions {
-            let toolchain_path = toolchains_dir.join(&version).join(&self.language);
-            if toolchain_path.exists() {
-                toolchains.push((version, toolchain_path));
-            }
-        }
-
-        if toolchains.is_empty() {
-            println!("No matching toolchains found to remove");
-            return Ok(());
-        }
-
-        // Show removal preview
-        println!("The following toolchains will be removed:");
-        for (version, path) in &toolchains {
-            println!("- {} (version: {})", path.display(), version);
-        }
-
         // Confirm removal with user (unless force flag is set)
         if !self.force && !confirm("Are you sure you want to continue? [y/N]")? {
             println!("Removal cancelled");
             return Ok(());
         }
 
+        let registry = RegistryClient::new(&ctx.registry(None));
+        let mut manager = ToolchainManager::new(registry, ctx.home_dir());
+
         // Execute the removal
-        self.remove_toolchains(&toolchains)
-    }
+        manager.remove(&self.language)?;
 
-    fn resolve_versions(&self, ctx: &Context) -> Result<Vec<String>> {
-        match (&self.version, self.all) {
-            (Some(ver), _) => Ok(vec![ver.clone()]),
-            (None, true) => self.find_all_versions(ctx),
-            (None, false) => Ok(vec![ctx.version()]),
-        }
-    }
-
-    fn find_all_versions(&self, ctx: &Context) -> Result<Vec<String>> {
-        let toolchains_dir = ctx.toolchains_dir();
-
-        let mut versions = Vec::new();
-        for entry in fs::read_dir(toolchains_dir)? {
-            let path = entry?.path();
-            if let Some(name) = path.file_name() {
-                versions.push(name.to_string_lossy().into_owned());
-            }
-        }
-        Ok(versions)
-    }
-
-    /// Performs the actual directory removal
-    fn remove_toolchains(&self, targets: &[(String, PathBuf)]) -> Result<()> {
-        for (version, path) in targets {
-            if path.exists() {
-                fs::remove_dir_all(path)?;
-                println!("Removed: {} (version: {})", path.display(), version);
-
-                // Clean up empty version directories
-                if let Some(parent) = path.parent() {
-                    if fs::read_dir(parent)?.next().is_none() {
-                        fs::remove_dir(parent)?;
-                    }
-                }
-            }
-        }
         Ok(())
     }
 }

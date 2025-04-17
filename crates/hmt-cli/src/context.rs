@@ -46,19 +46,9 @@ impl Context {
         Ok(Self { config, config_path })
     }
 
-    /// Gets currently active version.
-    pub fn version(&self) -> String {
-        format!("v{}", env!("CARGO_PKG_VERSION"))
-    }
-
     /// Gets the path to the Hummanta home directory.
     pub fn home_dir(&self) -> PathBuf {
         self.config_path.parent().unwrap().to_path_buf()
-    }
-
-    /// Gets the path to the toolchains directory.
-    pub fn toolchains_dir(&self) -> PathBuf {
-        self.home_dir().join("toolchains")
     }
 
     #[allow(dead_code)]
