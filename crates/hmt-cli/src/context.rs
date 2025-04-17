@@ -51,7 +51,6 @@ impl Context {
         self.config_path.parent().unwrap().to_path_buf()
     }
 
-    #[allow(dead_code)]
     /// Computes the final registry URL based on the priority:
     /// CLI > Environment > Config > Default.
     pub fn registry(&self, registry: Option<String>) -> String {

@@ -12,18 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! layout:
-//! ~/.hummanta
-//! └── manifests
-//! |    └── v0.2.1
-//! |        └── toolchains
-//! |            └── index.toml
-//! |            └── solidity.toml
-//! └── toolchains
-//!     └── v0.2.1
-//!         └── solidity
-
-// mod add;
+mod add;
 mod list;
 mod remove;
 
@@ -41,7 +30,7 @@ pub struct Command {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    // Add(add::Command),
+    Add(add::Command),
     Remove(remove::Command),
     List(list::Command),
 }
@@ -49,7 +38,7 @@ enum Commands {
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
-            // Commands::Add(cmd) => cmd.exec(ctx).await,
+            Commands::Add(cmd) => cmd.exec(ctx).await,
             Commands::Remove(cmd) => cmd.exec(ctx),
             Commands::List(cmd) => cmd.exec(ctx),
         }
