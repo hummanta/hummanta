@@ -14,7 +14,11 @@
 
 #![allow(unused)]
 
-use std::{marker::PhantomData, path::Path, str::FromStr};
+use std::{
+    marker::PhantomData,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use hmt_fetcher::FetchContext;
 use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
@@ -28,18 +32,24 @@ use crate::{
 
 pub struct Manager<T: PackageKind> {
     registry: RegistryClient,
-    kind: PhantomData<T>,
+    install_root: PathBuf,
+    _marker: PhantomData<T>,
 }
 
 impl<T: PackageKind> Manager<T> {
-    pub fn new(registry: RegistryClient) -> Self {
-        Self { registry, kind: PhantomData }
+    pub fn new(registry: RegistryClient, install_root: PathBuf) -> Self {
+        Self { registry, install_root, _marker: PhantomData }
+    }
+
+    fn install_path(&self, name: &str) -> PathBuf {
+        self.install_root.join(T::kind()).join(name)
     }
 }
 
 impl<T: PackageKind> PackageManager for Manager<T> {
-    async fn add(&self, name: &str, target_dir: &Path) -> Result<()> {
+    async fn add(&self, name: &str) -> Result<()> {
         let index = self.fetch_index(name).await?;
+        let install_path = self.install_path(name);
 
         for (category, name) in index.entries() {
             let package = self.fetch_package(category, name).await?;
@@ -59,7 +69,7 @@ impl<T: PackageKind> PackageManager for Manager<T> {
             let data = self.registry.fetch(&context).await?;
 
             // Unpack the file and extract its contents to the target directory
-            archive::unpack(&data, target_dir).map_err(|e| {
+            archive::unpack(&data, &install_path).map_err(|e| {
                 eprintln!("ERROR: {}", e);
                 RegistryError::UnpackError(name.to_string())
             })?;
