@@ -12,14 +12,11 @@ path = "src/main.rs"
 hmt-detection.workspace = true
 hmt-manifest.workspace = true
 hmt-registry.workspace = true
-hmt-utils.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true
 dirs.workspace = true
-semver.workspace = true
 serde.workspace = true
-target-triple.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 toml.workspace = true
