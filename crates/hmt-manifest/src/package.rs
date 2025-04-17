@@ -27,6 +27,7 @@ use crate::{ManifestError, ManifestFile};
 /// Example:
 /// ```toml
 /// name = "solidity-detector-foundry"
+/// homepage = "https://hummanta.github.io/solidity-detector-foundry"
 /// repository = "https://github.com/hummanta/solidity-detector-foundry"
 /// language = "solidity"
 /// kind = "detector"
