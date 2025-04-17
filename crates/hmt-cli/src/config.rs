@@ -22,9 +22,6 @@ const DEFAULT_REGISTRY: &str = "https://hummanta.github.io/registry";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// The currently active version.
-    pub active_version: Option<String>,
-
     /// The URL of the registry to use.
     ///
     /// This can be overridden by the CLI argument `--registry`,
@@ -35,7 +32,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { active_version: None, registry: DEFAULT_REGISTRY.to_string() }
+        Self { registry: DEFAULT_REGISTRY.to_string() }
     }
 }
 
@@ -50,6 +47,7 @@ impl Config {
         }
     }
 
+    #[allow(dead_code)]
     pub fn save(&self, path: &PathBuf) -> Result<()> {
         let content = toml::to_string_pretty(self)?;
         std::fs::write(path, content)?;

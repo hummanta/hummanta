@@ -48,10 +48,7 @@ impl Context {
 
     /// Gets currently active version.
     pub fn version(&self) -> String {
-        self.config
-            .active_version
-            .clone()
-            .unwrap_or_else(|| format!("v{}", env!("CARGO_PKG_VERSION")))
+        format!("v{}", env!("CARGO_PKG_VERSION"))
     }
 
     /// Gets the path to the Hummanta home directory.
