@@ -1,0 +1,14 @@
+[package]
+name = "hmt-registry"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+# inner dependencies
+hmt-manifest.workspace = true
+hmt-fetcher.workspace = true
+hmt-utils.workspace = true
+
+target-triple.workspace = true
+thiserror.workspace = true
+toml.workspace = true

@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod bytes;
-pub mod checksum;
+mod base;
+mod target;
+mod toolchain;
+
+// Re-exports
+pub use base::Manager;
+pub use target::TargetManager;
+pub use toolchain::ToolchainManager;

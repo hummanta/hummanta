@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod bytes;
-pub mod checksum;
+pub mod client;
+pub mod error;
+pub mod manager;
+pub mod traits;
+
+// Re-exports
+pub use client::RegistryClient;

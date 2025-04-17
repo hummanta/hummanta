@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
         .context(format!("Failed to read package config from file: {}", args.package.display()))?;
 
     if !args.artifacts_dir.exists() {
-        return Err(anyhow!("Artifacts directory does not exist: {}", args.artifacts_dir.display()));
+        return Err(anyhow!("Artifacts dir does not exist: {}", args.artifacts_dir.display()));
     }
 
     // Create output directory if it doesn't exist

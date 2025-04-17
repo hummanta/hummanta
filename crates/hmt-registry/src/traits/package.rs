@@ -12,6 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod bytes;
-pub mod checksum;
+use std::future::Future;
+
+use hmt_manifest::DomainMap;
+
+use crate::error::Result;
+
+/// A trait for managing package operations,
+/// including adding, removing, and listing package manifests.
+pub trait PackageManager {
+    /// Adds a package identified by the given domain.
+    fn add(&mut self, domain: &str) -> impl Future<Output = Result<()>>;
+
+    /// Removes a package identified by the given domain.
+    fn remove(&mut self, domain: &str) -> Result<()>;
+
+    /// Return all installed packages under the current kind.
+    fn list(&self) -> Option<&DomainMap>;
+}

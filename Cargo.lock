@@ -507,6 +507,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "hmt-registry"
+version = "0.7.0"
+dependencies = [
+ "hmt-fetcher",
+ "hmt-manifest 0.7.0",
+ "hmt-utils 0.7.0",
+ "target-triple",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "hmt-utils"
 version = "0.6.1"
 source = "git+https://github.com/hummanta/hummanta.git?rev=25bac55#25bac5542024372864363feb4e8007c4487cd741"

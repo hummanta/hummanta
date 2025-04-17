@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod bytes;
-pub mod checksum;
+use crate::traits::PackageKind;
+
+use super::Manager;
+
+pub type TargetManager = Manager<Target>;
+pub struct Target;
+
+impl PackageKind for Target {
+    fn kind() -> &'static str {
+        "targets"
+    }
+}

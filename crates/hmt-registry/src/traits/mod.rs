@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod archive;
-pub mod bytes;
-pub mod checksum;
+mod kind;
+mod manager;
+mod package;
+mod remote;
+
+// Re-exports
+pub use kind::PackageKind;
+pub use manager::Manager;
+pub use package::PackageManager;
+pub use remote::RemoteMetadata;
