@@ -13,7 +13,9 @@
 // limitations under the License.
 
 use clap::Args;
-use std::{fs, sync::Arc};
+use hmt_manifest::DomainMap;
+use hmt_registry::{manager::ToolchainManager, traits::PackageManager, RegistryClient};
+use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
 
@@ -23,39 +25,27 @@ pub struct Command {}
 
 impl Command {
     pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let toolchains_dir = ctx.toolchains_dir();
+        let registry = RegistryClient::new(&ctx.registry(None));
+        let manager = ToolchainManager::new(registry, ctx.home_dir());
 
-        let mut pairs = Vec::new();
-
-        for version_entry in fs::read_dir(&toolchains_dir)? {
-            let version_entry = version_entry?;
-            if !version_entry.path().is_dir() {
-                continue;
-            }
-
-            for toolchain_entry in fs::read_dir(version_entry.path())? {
-                let toolchain_entry = toolchain_entry?;
-                if !toolchain_entry.path().is_dir() {
-                    continue;
-                }
-
-                pairs.push((
-                    toolchain_entry.path().file_name().unwrap().to_str().unwrap().to_string(),
-                    version_entry.path().file_name().unwrap().to_str().unwrap().to_string(),
-                ));
-            }
-        }
-
-        pairs.sort_by(|a, b| a.0.cmp(&b.0));
-
-        for (toolchain, version) in pairs {
-            if version == ctx.version() {
-                println!("* {} ({}) (active)", toolchain, version);
-            } else {
-                println!("  {} ({})", toolchain, version);
-            }
+        if let Some(domains) = manager.list() {
+            self.print_domain_packages(domains);
         }
 
         Ok(())
+    }
+
+    fn print_domain_packages(&self, domains: &DomainMap) {
+        for (domain, categories) in domains {
+            println!("{domain}");
+            for packages in categories.values() {
+                for (name, entry) in packages {
+                    println!("  {name} {}", entry.version);
+                    if let Some(desc) = &entry.description {
+                        println!("  {desc}");
+                    }
+                }
+            }
+        }
     }
 }
