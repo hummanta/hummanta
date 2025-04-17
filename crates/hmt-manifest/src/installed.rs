@@ -14,21 +14,43 @@
 
 use hmt_utils::bytes::FromSlice;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, path::PathBuf, str::FromStr};
 
 use crate::{ManifestError, ManifestFile};
 
 /// Represents a single installed package entry with version and optional description.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entry {
+    /// The version of the package.
     pub version: String,
+    /// An optional description of the package.
     pub description: Option<String>,
+    /// The file path where the package is located.
+    pub path: PathBuf,
 }
 
 impl Entry {
     /// Create a new, empty Entry.
-    pub fn new(version: String, description: Option<String>) -> Self {
-        Self { version, description }
+    pub fn new(version: String, description: Option<String>, path: PathBuf) -> Self {
+        Self { version, description, path }
+    }
+}
+
+/// Represents a package entry with associated domain, name, and metadata.
+#[derive(Debug, Clone)]
+pub struct PackageEntry {
+    /// The domain to which the package belongs.
+    pub domain: String,
+    /// The name of the package.
+    pub name: String,
+    /// The metadata associated with the package entry.
+    pub entry: Entry,
+}
+
+impl PackageEntry {
+    /// Creates a new PackageEntry from the given domain, name, and entry.
+    pub fn new(domain: String, name: String, entry: Entry) -> Self {
+        Self { domain, name, entry }
     }
 }
 
@@ -122,6 +144,28 @@ impl InstalledManifest {
         if let Some(kind_map) = self.0.get_mut(kind) {
             kind_map.remove(domain);
         }
+    }
+
+    /// Get all entries under the given kind and category across all domains.
+    /// Returns a vector of `PackageEntry`.
+    pub fn by_category(&self, kind: &str, category: &str) -> Vec<PackageEntry> {
+        let mut results = Vec::new();
+
+        if let Some(domain_map) = self.get_domain(kind) {
+            for (domain, cat_map) in domain_map {
+                if let Some(pkg_map) = cat_map.get(category) {
+                    for (pkg_name, entry) in pkg_map {
+                        results.push(PackageEntry::new(
+                            domain.clone(),
+                            pkg_name.clone(),
+                            entry.clone(),
+                        ));
+                    }
+                }
+            }
+        }
+
+        results
     }
 }
 

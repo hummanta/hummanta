@@ -12,15 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod kind;
-mod manager;
-mod package;
-mod query;
-mod remote;
+use hmt_manifest::PackageEntry;
 
-// Re-exports
-pub use kind::PackageKind;
-pub use manager::Manager;
-pub use package::PackageManager;
-pub use query::Query;
-pub use remote::RemoteMetadata;
+/// Trait for querying installed packages from the local cache.
+pub trait Query {
+    /// Returns all `PackageEntry` tuples under the given category.
+    fn by_category(&self, category: &str) -> Vec<PackageEntry>;
+}

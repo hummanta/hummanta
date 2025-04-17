@@ -9,12 +9,9 @@ path = "src/main.rs"
 
 [dependencies]
 # inner dependencies
-hmt-fetcher.workspace = true
-
-# hmt-manifest.workspace = true
-hmt-manifest = { git = "https://github.com/hummanta/hummanta.git", rev = "25bac55" }
-
 hmt-detection.workspace = true
+hmt-manifest.workspace = true
+hmt-registry.workspace = true
 hmt-utils.workspace = true
 
 anyhow.workspace = true

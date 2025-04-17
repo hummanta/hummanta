@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{PackageManager, RemoteMetadata};
+use super::{PackageManager, Query, RemoteMetadata};
 
-pub trait Manager: PackageManager + RemoteMetadata {}
+pub trait Manager: PackageManager + RemoteMetadata + Query {}
 
-impl<T> Manager for T where T: PackageManager + RemoteMetadata {}
+impl<T> Manager for T where T: PackageManager + RemoteMetadata + Query {}

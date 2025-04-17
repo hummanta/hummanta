@@ -61,11 +61,6 @@ impl Context {
         self.home_dir().join("toolchains")
     }
 
-    /// Gets the path to the manifests directory.
-    pub fn manifests_dir(&self) -> PathBuf {
-        self.home_dir().join("manifests")
-    }
-
     #[allow(dead_code)]
     /// Computes the final registry URL based on the priority:
     /// CLI > Environment > Config > Default.

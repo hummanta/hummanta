@@ -20,16 +20,16 @@ use std::{
     str::FromStr,
 };
 
-use hmt_fetcher::FetchContext;
+use hmt_fetcher::{traits, FetchContext};
 use hmt_manifest::{
-    DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, Package, PackageManifest,
-    ReleaseManifest,
+    DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, Package, PackageEntry,
+    PackageManifest, ReleaseManifest,
 };
 use hmt_utils::{archive, bytes::FromSlice};
 
 use crate::{
     error::{RegistryError, Result},
-    traits::{PackageKind, PackageManager, RemoteMetadata},
+    traits::{Manager as ManagerTrait, PackageKind, PackageManager, Query, RemoteMetadata},
     RegistryClient,
 };
 
@@ -70,6 +70,8 @@ impl<T: PackageKind> Manager<T> {
     }
 }
 
+// impl<T: PackageKind> ManagerTrait for Manager<T> {}
+
 impl<T: PackageKind> PackageManager for Manager<T> {
     /// Add a package to the system and update the cache.
     async fn add(&mut self, domain: &str) -> Result<()> {
@@ -81,8 +83,7 @@ impl<T: PackageKind> PackageManager for Manager<T> {
             let package = self.fetch_package(&index, category, name).await?;
 
             // Fetch the release manifest by latest version.
-            let version = &package.latest;
-            let release = self.fetch_release(&package, version).await?;
+            let release = self.fetch_release(&package, &package.latest).await?;
             if !release.supports_target(target_triple::TARGET) {
                 eprintln!("{name} does not support current target platform, skipping.");
                 continue;
@@ -104,8 +105,11 @@ impl<T: PackageKind> PackageManager for Manager<T> {
             })?;
 
             // Now, update cache to reflect the new installation
-            let description = &package.package.description;
-            let entry = Entry::new(version.to_string(), description.clone());
+            let entry = Entry::new(
+                package.latest.to_string(),
+                package.package.description.clone(),
+                install_path.join(name),
+            );
             self.cache.insert(T::kind(), domain, category, name, entry);
             self.cache.save(self.cache_path())?;
         }
@@ -196,5 +200,11 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
         let manifest = ReleaseManifest::from_slice(&bytes)?;
 
         Ok(manifest)
+    }
+}
+
+impl<T: PackageKind> Query for Manager<T> {
+    fn by_category(&self, category: &str) -> Vec<PackageEntry> {
+        self.cache.by_category(T::kind(), category)
     }
 }
