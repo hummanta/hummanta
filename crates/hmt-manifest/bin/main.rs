@@ -25,7 +25,7 @@ use hmt_manifest::{ManifestFile, Package};
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let version = args.version();
+    let version = &args.version;
 
     // load package configuration
     let package = Package::load(&args.package)
@@ -39,15 +39,15 @@ async fn main() -> Result<()> {
     std::fs::create_dir_all(&args.output_dir)?;
 
     // Generate release manifest and save to path
-    let release = release::generate(&package, &args.artifacts_dir, &version)?;
+    let release = release::generate(&package, &args.artifacts_dir, version)?;
     release.save(args.output_dir.join(format!("release-{}.toml", version)))?;
 
     // Update or create package manifest
     let index_path = args.output_dir.join("index.toml");
     if index_path.exists() {
-        package::update(&package, &index_path, &version)?;
+        package::update(&package, &index_path, version)?;
     } else {
-        package::create(&package, &index_path, &version)?;
+        package::create(&package, &index_path, version)?;
     }
 
     println!("Manifests generated successfully!");

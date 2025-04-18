@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
 
@@ -31,18 +31,7 @@ pub struct Args {
     #[arg(long)]
     pub output_dir: PathBuf,
 
-    /// Version to publish (overrides CARGO_PKG_VERSION)
+    /// Version to publish
     #[arg(long)]
-    version: Option<String>,
-}
-
-impl Args {
-    /// Determine the version, defaulting to CARGO_PKG_VERSION with 'v' prefix if not set
-    pub fn version(&self) -> String {
-        self.version
-            .as_ref()
-            .filter(|v| !v.is_empty())
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| format!("v{}", env!("CARGO_PKG_VERSION")))
-    }
+    pub version: String,
 }
