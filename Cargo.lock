@@ -161,9 +161,9 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "clap"
-version = "4.5.36"
+version = "4.5.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2df961d8c8a0d08aa9945718ccf584145eee3f3aa06cddbeac12933781102e04"
+checksum = "eccb054f56cbd38340b380d4a8e69ef1f02f1af43db2f0cc817a4774d80ae071"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -171,9 +171,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.36"
+version = "4.5.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "132dbda40fb6753878316a489d5a1242a8ef2f0d9e47ba01c951ea8aa7d013a5"
+checksum = "efd9466fac8543255d3b1fcad4762c5e116ffe808c8a3043d4263cd4fd4862a2"
 dependencies = [
  "anstream",
  "anstyle",
@@ -424,7 +424,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hmt-cli"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -442,7 +442,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-detection"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "clap",
  "serde",
@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-fetcher"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "async-trait",
  "hmt-utils",
@@ -463,7 +463,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-manifest"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -476,7 +476,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-packager"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -489,7 +489,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-registry"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "hmt-fetcher",
  "hmt-manifest",
@@ -501,7 +501,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-utils"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "flate2",
