@@ -13,6 +13,7 @@ hmt-utils.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true
+semver.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use anyhow::Result;
-use hmt_manifest::{ManifestFile, Package, PackageManifest};
 use std::path::Path;
+
+use anyhow::Result;
+use semver::Version;
+
+use hmt_manifest::{ManifestFile, Package, PackageManifest};
 
 /// Creates a new package manifest file with the given configuration
 ///
@@ -44,7 +47,7 @@ pub fn update(package: &Package, path: &Path, version: &str) -> Result<()> {
     manifest.package = package.clone();
 
     // Update the latest version if the new version is higher
-    if version > manifest.latest.as_str() {
+    if Version::parse(version)? > Version::parse(manifest.latest.as_str())? {
         manifest.latest = version.to_string();
     }
 
