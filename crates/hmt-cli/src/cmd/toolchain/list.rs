@@ -30,7 +30,9 @@ impl Command {
         let manager = manager.read().await;
 
         if let Some(domains) = manager.list() {
-            utils::print_domain_packages(domains);
+            for (domain, categories) in domains {
+                utils::print_domain_packages(domain, categories);
+            }
         }
 
         Ok(())
