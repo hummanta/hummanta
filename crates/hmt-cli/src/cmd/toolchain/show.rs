@@ -12,38 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod add;
-mod list;
-mod remove;
-mod show;
-
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result};
-use clap::{Args, Subcommand};
+use anyhow::Ok;
+use clap::Args;
 
-/// Manage compilation toolchains
+use hmt_registry::traits::Query;
+
+use crate::{context::Context, errors::Result, utils};
+
+/// Displays the details of the the specified language's toolchain
 #[derive(Args, Debug)]
 pub struct Command {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    Add(add::Command),
-    Remove(remove::Command),
-    Show(show::Command),
-    List(list::Command),
+    /// The language to show the toolchain for.
+    language: String,
 }
 
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        match &self.command {
-            Commands::Add(cmd) => cmd.exec(ctx).await,
-            Commands::Remove(cmd) => cmd.exec(ctx).await,
-            Commands::Show(cmd) => cmd.exec(ctx).await,
-            Commands::List(cmd) => cmd.exec(ctx).await,
+        // Acquires the toolchain manager.
+        let manager = ctx.toolchains().await?;
+        let manager = manager.read().await;
+
+        let domain = &self.language;
+        if let Some(categories) = manager.get_category(domain) {
+            utils::print_domain_packages(domain, categories);
         }
+
+        Ok(())
     }
 }
