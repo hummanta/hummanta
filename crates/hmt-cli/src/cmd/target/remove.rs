@@ -14,18 +14,36 @@
 
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result};
+use crate::{context::Context, errors::Result, utils::confirm};
 use clap::Args;
+use hmt_registry::traits::PackageManager;
 
 /// Removes the specified target configuration
 #[derive(Args, Debug)]
 pub struct Command {
     /// The name of the target
     target: String,
+
+    /// Skip confirmation prompt
+    #[arg(short, long)]
+    force: bool,
 }
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        // Confirm removal with user (unless force flag is set)
+        if !self.force && !confirm("Are you sure you want to continue? [y/N]")? {
+            println!("Removal cancelled");
+            return Ok(());
+        }
+
+        // Acquires the target manager.
+        let manager = ctx.targets().await?;
+        let mut manager = manager.write().await;
+
+        // Execute the removal
+        manager.remove(&self.target)?;
+
+        Ok(())
     }
 }
