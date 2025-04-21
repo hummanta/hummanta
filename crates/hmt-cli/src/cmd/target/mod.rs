@@ -38,9 +38,9 @@ enum Commands {
 }
 
 impl Command {
-    pub fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
-            Commands::Add(cmd) => cmd.exec(ctx),
+            Commands::Add(cmd) => cmd.exec(ctx).await,
             Commands::Remove(cmd) => cmd.exec(ctx),
             Commands::Show(cmd) => cmd.exec(ctx),
             Commands::List(cmd) => cmd.exec(ctx),

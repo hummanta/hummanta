@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use crate::{context::Context, errors::Result};
 use clap::Args;
+use hmt_registry::traits::PackageManager;
 
 /// Adds a new target configuration.
 #[derive(Args, Debug)]
@@ -25,7 +26,14 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        // Acquires the target manager.
+        let manager = ctx.targets().await?;
+        let mut manager = manager.write().await;
+
+        manager.add(&self.target).await?;
+        println!("Successfully installed {} target", self.target);
+
+        Ok(())
     }
 }

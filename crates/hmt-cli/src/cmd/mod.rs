@@ -50,7 +50,7 @@ impl Command {
             Commands::Build(cmd) => cmd.exec(ctx),
             Commands::Compile(cmd) => cmd.exec(ctx),
             Commands::Init(cmd) => cmd.exec(ctx).await,
-            Commands::Target(cmd) => cmd.exec(ctx),
+            Commands::Target(cmd) => cmd.exec(ctx).await,
             Commands::Toolchain(cmd) => cmd.exec(ctx).await,
         }
     }
