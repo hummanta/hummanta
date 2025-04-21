@@ -14,15 +14,25 @@
 
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result};
 use clap::Args;
+use hmt_registry::traits::PackageManager;
+
+use crate::{context::Context, errors::Result, utils};
 
 /// Lists all targets
 #[derive(Args, Debug)]
 pub struct Command {}
 
 impl Command {
-    pub fn exec(&self, _ctx: Arc<Context>) -> Result<()> {
-        unimplemented!();
+    pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
+        // Acquires the target manager.
+        let manager = ctx.targets().await?;
+        let manager = manager.read().await;
+
+        if let Some(domains) = manager.list() {
+            utils::print_domain_packages(domains);
+        }
+
+        Ok(())
     }
 }

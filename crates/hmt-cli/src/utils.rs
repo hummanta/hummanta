@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use hmt_manifest::DomainMap;
+
 use crate::errors::Result;
 
 pub fn confirm(prompt: &str) -> Result<bool> {
@@ -21,4 +23,18 @@ pub fn confirm(prompt: &str) -> Result<bool> {
     std::io::stdin().read_line(&mut input)?;
 
     Ok(input.trim().eq_ignore_ascii_case("y"))
+}
+
+pub fn print_domain_packages(domains: &DomainMap) {
+    for (domain, categories) in domains {
+        println!("{domain}");
+        for packages in categories.values() {
+            for (name, entry) in packages {
+                println!("  {name} {}", entry.version);
+                if let Some(desc) = &entry.description {
+                    println!("  {desc}");
+                }
+            }
+        }
+    }
 }

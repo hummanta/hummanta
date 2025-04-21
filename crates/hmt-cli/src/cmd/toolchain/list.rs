@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use clap::Args;
-use hmt_manifest::DomainMap;
-use hmt_registry::traits::PackageManager;
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result};
+use clap::Args;
+use hmt_registry::traits::PackageManager;
+
+use crate::{context::Context, errors::Result, utils};
 
 /// Lists all toolchains
 #[derive(Args, Debug)]
@@ -30,23 +30,9 @@ impl Command {
         let manager = manager.read().await;
 
         if let Some(domains) = manager.list() {
-            self.print_domain_packages(domains);
+            utils::print_domain_packages(domains);
         }
 
         Ok(())
-    }
-
-    fn print_domain_packages(&self, domains: &DomainMap) {
-        for (domain, categories) in domains {
-            println!("{domain}");
-            for packages in categories.values() {
-                for (name, entry) in packages {
-                    println!("  {name} {}", entry.version);
-                    if let Some(desc) = &entry.description {
-                        println!("  {desc}");
-                    }
-                }
-            }
-        }
     }
 }
