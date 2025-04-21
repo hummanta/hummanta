@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(dead_code)]
+
 use std::{path::PathBuf, sync::Arc};
 
 use anyhow::Context as _;
-use hmt_registry::{manager::ToolchainManager, RegistryClient};
+use hmt_registry::{
+    manager::{TargetManager, ToolchainManager},
+    RegistryClient,
+};
 use tokio::sync::{OnceCell, RwLock};
 
 use crate::{config::Config, errors::Result};
@@ -30,6 +35,9 @@ pub struct Context {
 
     /// Overridden registry URL
     registry: Option<String>,
+
+    /// Lazily initialized target manager
+    target_manager: OnceCell<Arc<RwLock<TargetManager>>>,
 
     /// Lazily initialized toolchain manager
     toolchain_manager: OnceCell<Arc<RwLock<ToolchainManager>>>,
@@ -55,6 +63,7 @@ impl Context {
             config,
             config_path,
             registry: registry.clone(),
+            target_manager: OnceCell::new(),
             toolchain_manager: OnceCell::new(),
         })
     }
@@ -71,6 +80,17 @@ impl Context {
             .clone()
             .or_else(|| std::env::var("HUMMANTA_REGISTRY").ok())
             .unwrap_or_else(|| self.config.registry.clone())
+    }
+
+    /// Gets the target manager, initializing it if necessary
+    pub async fn targets(&self) -> Result<Arc<RwLock<TargetManager>>> {
+        self.target_manager
+            .get_or_try_init(|| async {
+                let registry = RegistryClient::new(&self.registry());
+                Ok(Arc::new(RwLock::new(TargetManager::new(registry, self.home_dir()))))
+            })
+            .await
+            .cloned()
     }
 
     /// Gets the toolchain manager, initializing it if necessary
