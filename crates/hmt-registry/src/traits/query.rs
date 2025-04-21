@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use hmt_manifest::PackageEntry;
+use hmt_manifest::{CategoryMap, PackageEntry};
 
 /// Trait for querying installed packages from the local cache.
 pub trait Query {
     /// Returns all `PackageEntry` tuples under the given category.
     fn by_category(&self, category: &str) -> Vec<PackageEntry>;
+
+    /// Get a category map under the given domain.
+    fn get_category(&self, domain: &str) -> Option<&CategoryMap>;
 }

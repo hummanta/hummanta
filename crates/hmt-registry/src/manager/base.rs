@@ -22,8 +22,8 @@ use std::{
 
 use hmt_fetcher::{traits, FetchContext};
 use hmt_manifest::{
-    DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, Package, PackageEntry,
-    PackageManifest, ReleaseManifest,
+    CategoryMap, DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, Package,
+    PackageEntry, PackageManifest, ReleaseManifest,
 };
 use hmt_utils::{archive, bytes::FromSlice};
 
@@ -206,5 +206,9 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
 impl<T: PackageKind> Query for Manager<T> {
     fn by_category(&self, category: &str) -> Vec<PackageEntry> {
         self.cache.by_category(T::kind(), category)
+    }
+
+    fn get_category(&self, domain: &str) -> Option<&CategoryMap> {
+        self.cache.get_category(T::kind(), domain)
     }
 }
