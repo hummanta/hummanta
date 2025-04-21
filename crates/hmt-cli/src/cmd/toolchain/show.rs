@@ -14,9 +14,7 @@
 
 use std::sync::Arc;
 
-use anyhow::Ok;
 use clap::Args;
-
 use hmt_registry::traits::Query;
 
 use crate::{context::Context, errors::Result, utils};

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use anyhow::Ok;
+use std::sync::Arc;
+
 use clap::Args;
 use hmt_registry::traits::PackageManager;
-use std::sync::Arc;
 
 use crate::{context::Context, errors::Result, utils::confirm};
 

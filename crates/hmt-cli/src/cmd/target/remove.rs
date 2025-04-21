@@ -14,9 +14,10 @@
 
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result, utils::confirm};
 use clap::Args;
 use hmt_registry::traits::PackageManager;
+
+use crate::{context::Context, errors::Result, utils::confirm};
 
 /// Removes the specified target configuration
 #[derive(Args, Debug)]

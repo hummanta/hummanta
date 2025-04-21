@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
 use std::future::Future;
+
+use hmt_manifest::{IndexManifest, PackageManifest, ReleaseManifest};
 
 use crate::error::Result;
 

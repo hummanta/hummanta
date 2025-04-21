@@ -12,24 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(unused)]
+use std::{marker::PhantomData, path::PathBuf};
 
-use std::{
-    marker::PhantomData,
-    path::{Path, PathBuf},
-    str::FromStr,
-};
-
-use hmt_fetcher::{traits, FetchContext};
+use hmt_fetcher::FetchContext;
 use hmt_manifest::{
-    CategoryMap, DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, Package,
-    PackageEntry, PackageManifest, ReleaseManifest,
+    CategoryMap, DomainMap, Entry, IndexManifest, InstalledManifest, ManifestFile, PackageEntry,
+    PackageManifest, ReleaseManifest,
 };
 use hmt_utils::{archive, bytes::FromSlice};
 
 use crate::{
     error::{RegistryError, Result},
-    traits::{Manager as ManagerTrait, PackageKind, PackageManager, Query, RemoteMetadata},
+    traits::{PackageKind, PackageManager, Query, RemoteMetadata},
     RegistryClient,
 };
 

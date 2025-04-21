@@ -14,10 +14,10 @@
 
 use std::sync::Arc;
 
-use crate::{context::Context, errors::Result, utils};
-use anyhow::Ok;
 use clap::Args;
 use hmt_registry::traits::Query;
+
+use crate::{context::Context, errors::Result, utils};
 
 /// Displays the details of the specified target
 #[derive(Args, Debug)]
@@ -30,7 +30,7 @@ impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         // Acquires the target manager.
         let manager = ctx.targets().await?;
-        let manager = manager.write().await;
+        let manager = manager.read().await;
 
         let domain = &self.target;
         if let Some(categories) = manager.get_category(domain) {

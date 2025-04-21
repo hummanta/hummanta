@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::io;
+
+use thiserror::Error;
+
 use hmt_fetcher::errors::FetchError;
 use hmt_manifest::ManifestError;
-use std::io;
-use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, RegistryError>;
 
