@@ -52,7 +52,7 @@ pub fn update(package: &Package, path: &Path, version: &str) -> Result<()> {
 
     // Update the latest version if the new version is higher
     if let Some(new_ver) = try_parse_semver(version) {
-        if try_parse_semver(&manifest.latest).map_or(true, |curr| new_ver > curr) {
+        if try_parse_semver(&manifest.latest).is_none_or(|curr| new_ver > curr) {
             manifest.latest = version.to_string();
         }
     } else {
