@@ -46,8 +46,16 @@ pub fn update(package: &Package, path: &Path, version: &str) -> Result<()> {
     // Update package metadata and targets
     manifest.package = package.clone();
 
+    fn try_parse_semver(v: &str) -> Option<Version> {
+        Version::parse(v.trim_start_matches('v')).ok()
+    }
+
     // Update the latest version if the new version is higher
-    if Version::parse(version)? > Version::parse(manifest.latest.as_str())? {
+    if let Some(new_ver) = try_parse_semver(version) {
+        if try_parse_semver(&manifest.latest).map_or(true, |curr| new_ver > curr) {
+            manifest.latest = version.to_string();
+        }
+    } else {
         manifest.latest = version.to_string();
     }
 
