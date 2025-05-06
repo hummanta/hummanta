@@ -13,7 +13,6 @@
 // limitations under the License.
 
 mod build;
-mod compile;
 mod init;
 mod target;
 mod toolchain;
@@ -38,7 +37,6 @@ pub struct Command {
 #[derive(Subcommand)]
 pub enum Commands {
     Build(build::Command),
-    Compile(compile::Command),
     Init(init::Command),
     Target(target::Command),
     Toolchain(toolchain::Command),
@@ -48,7 +46,6 @@ impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
             Commands::Build(cmd) => cmd.exec(ctx),
-            Commands::Compile(cmd) => cmd.exec(ctx),
             Commands::Init(cmd) => cmd.exec(ctx).await,
             Commands::Target(cmd) => cmd.exec(ctx).await,
             Commands::Toolchain(cmd) => cmd.exec(ctx).await,
