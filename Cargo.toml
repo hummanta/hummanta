@@ -25,7 +25,7 @@ reqwest = { version = "0.12.15", default-features = false, features = ["rustls-t
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-sha2 = "0.10.8"
+sha2 = "0.10.9"
 tar = "0.4.44"
 target-triple = "0.1.4"
 tempfile = "3.19.1"
