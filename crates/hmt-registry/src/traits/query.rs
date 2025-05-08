@@ -21,4 +21,7 @@ pub trait Query {
 
     /// Get a category map under the given domain.
     fn get_category(&self, domain: &str) -> Option<&CategoryMap>;
+
+    /// Get the package map under a specific domain, and type
+    fn get_package(&self, domain: &str, cat: &str) -> Vec<PackageEntry>;
 }

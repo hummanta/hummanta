@@ -205,4 +205,16 @@ impl<T: PackageKind> Query for Manager<T> {
     fn get_category(&self, domain: &str) -> Option<&CategoryMap> {
         self.cache.get_category(T::kind(), domain)
     }
+
+    fn get_package(&self, domain: &str, cat: &str) -> Vec<PackageEntry> {
+        let mut results = Vec::new();
+
+        if let Some(pkg_map) = self.cache.get_package(T::kind(), domain, cat) {
+            for (name, entry) in pkg_map {
+                results.push(PackageEntry::new(domain.to_string(), name.clone(), entry.clone()));
+            }
+        }
+
+        results
+    }
 }
