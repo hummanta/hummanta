@@ -52,4 +52,13 @@ impl std::str::FromStr for ProjectManifest {
 pub struct Project {
     /// The programming language used for the source code in this project.
     pub language: String,
+
+    /// The target to build
+    pub target: Option<String>,
+}
+
+impl Project {
+    pub fn new<T: ToString>(language: T) -> Self {
+        Self { language: language.to_string(), target: None }
+    }
 }

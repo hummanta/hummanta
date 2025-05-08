@@ -120,7 +120,7 @@ impl Command {
 
     /// Write the detected language to hummanta.toml
     fn write_config(&self, language: String) -> Result<()> {
-        let project = Project { language: language.clone() };
+        let project = Project::new(&language);
         let manifest = ProjectManifest::new(project);
 
         manifest.save("hummanta.toml")?;
