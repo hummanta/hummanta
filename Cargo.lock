@@ -432,6 +432,7 @@ dependencies = [
  "hmt-detection",
  "hmt-manifest",
  "hmt-registry",
+ "once_cell",
  "serde",
  "thiserror",
  "tokio",

@@ -20,6 +20,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context as _};
 use clap::Args;
+use once_cell::sync::OnceCell;
 use walkdir::WalkDir;
 
 use hmt_manifest::{ManifestFile, ProjectManifest};
@@ -33,6 +34,9 @@ pub struct Command {
     /// The target platform to build for
     #[arg(long)]
     target: Option<String>,
+
+    #[clap(skip)]
+    resolved_target: OnceCell<String>,
 }
 
 impl Command {
@@ -41,33 +45,35 @@ impl Command {
 
         let language = &manifest.project.language;
         let target = self.target(&manifest)?;
-        let target_dir = self.target_dir(&target)?;
+        let target_dir = self.target_dir(target)?;
 
         // Execute the complete build pipeline
         self.compile(ctx.clone(), language, &target_dir).await?;
-        self.emit(ctx.clone(), &target, &target_dir).await?;
+        self.emit(ctx.clone(), target, &target_dir).await?;
 
         println!("Build completed for target '{}'", target);
         Ok(())
     }
 
     /// Resolve target with clear precedence: CLI arg > manifest > error
-    fn target(&self, manifest: &ProjectManifest) -> Result<String> {
-        if let Some(cli_target) = &self.target {
-            if !cli_target.is_empty() {
-                return Ok(cli_target.to_owned());
+    fn target(&self, manifest: &ProjectManifest) -> Result<&str> {
+        self.resolved_target.get_or_try_init(|| {
+            if let Some(cli_target) = &self.target {
+                if !cli_target.is_empty() {
+                    return Ok(cli_target.to_owned());
+                }
+                bail!("Empty target specified in command line");
             }
-            bail!("Empty target specified in command line");
-        }
 
-        if let Some(manifest_target) = &manifest.project.target {
-            if !manifest_target.is_empty() {
-                return Ok(manifest_target.to_owned());
+            if let Some(manifest_target) = &manifest.project.target {
+                if !manifest_target.is_empty() {
+                    return Ok(manifest_target.to_owned());
+                }
+                bail!("Empty target specified in manifest");
             }
-            bail!("Empty target specified in manifest");
-        }
 
-        bail!("No target specified. Either set 'target' in hummanta.toml or use --target flag")
+            bail!("No target specified. Either set 'target' in hummanta.toml or use --target flag")
+        }).map(|s| s.as_str())
     }
 
     /// Prepares and validates the build output directory
