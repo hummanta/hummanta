@@ -41,7 +41,8 @@ pub struct Command {
 
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let manifest = ProjectManifest::load("hummanta.toml")?;
+        let manifest = ProjectManifest::load("hummanta.toml")
+            .with_context(|| "Could not find 'hummanta.toml'. Please run `hummanta init` first.")?;
 
         let target = self.target(&manifest)?;
         let target_dir = self.target_dir(target)?;
