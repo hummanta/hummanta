@@ -43,13 +43,12 @@ impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         let manifest = ProjectManifest::load("hummanta.toml")?;
 
-        let language = &manifest.project.language;
         let target = self.target(&manifest)?;
         let target_dir = self.target_dir(target)?;
 
         // Execute the complete build pipeline
-        self.compile(ctx.clone(), language, &target_dir).await?;
-        self.emit(ctx.clone(), target, &target_dir).await?;
+        self.compile(ctx.clone(), &manifest, &target_dir).await?;
+        self.emit(ctx.clone(), &manifest, &target_dir).await?;
 
         println!("Build completed for target '{}'", target);
         Ok(())
@@ -87,10 +86,18 @@ impl Command {
     }
 
     /// Compiles source code to intermediate representation (CLIF)
-    async fn compile(&self, ctx: Arc<Context>, language: &str, target_dir: &Path) -> Result<()> {
+    async fn compile(
+        &self,
+        ctx: Arc<Context>,
+        manifest: &ProjectManifest,
+        target_dir: &Path,
+    ) -> Result<()> {
         // Acquires the toolchain manager.
         let manager = ctx.toolchains().await?;
         let manager = manager.read().await;
+
+        let language = &manifest.project.language;
+        let extension = manifest.project.extension.as_str();
 
         // Get the appropriate frontend compiler
         let packages = manager.get_package(language, "frontend");
@@ -103,7 +110,7 @@ impl Command {
         for entry in WalkDir::new(".")
             .into_iter()
             .filter_map(Result::ok)
-            .filter(|e| e.path().extension().is_some_and(|ext| ext == language))
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == extension))
         {
             let input = entry.path();
             let file_stem = input
@@ -134,9 +141,16 @@ impl Command {
     }
 
     /// Compiles intermediate representation (CLIF) to target machine code
-    async fn emit(&self, ctx: Arc<Context>, target: &str, target_dir: &PathBuf) -> Result<()> {
+    async fn emit(
+        &self,
+        ctx: Arc<Context>,
+        manifest: &ProjectManifest,
+        target_dir: &PathBuf,
+    ) -> Result<()> {
         let manager = ctx.targets().await?;
         let manager = manager.read().await;
+
+        let target = self.target(manifest)?;
 
         // Get the appropriate backend compiler
         let packages = manager.get_package(target, "backend");
