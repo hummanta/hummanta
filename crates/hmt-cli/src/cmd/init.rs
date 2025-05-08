@@ -27,7 +27,7 @@ use hmt_detection::DetectResult;
 use hmt_manifest::{ManifestFile, PackageEntry, Project, ProjectManifest};
 use hmt_registry::traits::Query;
 
-use crate::{context::Context, errors::Result};
+use crate::{context::Context, errors::Result, utils};
 
 /// Initializes the workspace
 #[derive(Args, Debug)]
@@ -44,7 +44,7 @@ impl Command {
 
         // Execute detectors and find matching languages
         let path = std::env::current_dir()?;
-        let languages = self.detect(&detectors, &path)?;
+        let languages = self.detect(&detectors, &path).await?;
 
         match languages.len() {
             0 => println!("No supported language detected in this directory"),
@@ -60,27 +60,21 @@ impl Command {
     }
 
     /// Execute all detectors and return all matching languages
-    fn detect(&self, detectors: &Vec<PackageEntry>, path: &Path) -> Result<Vec<String>> {
+    async fn detect(&self, detectors: &Vec<PackageEntry>, path: &Path) -> Result<Vec<String>> {
         let mut languages = HashSet::new();
 
         for detector in detectors {
-            let binary_path = &detector.entry.path;
-            let output = std::process::Command::new(binary_path)
-                .arg("--path")
-                .arg(path)
-                .output()
-                .with_context(|| {
-                format!(
-                    "Failed to execute detector {} from toolchain {} at {:?}",
-                    detector.name, detector.domain, binary_path
-                )
-            })?;
+            let cmd = utils::command(
+                &detector.entry.path,
+                &["--path", path.to_str().context("Path contains invalid UTF-8")?],
+            )
+            .await?;
 
-            if !output.status.success() {
+            if !cmd.status.success() {
                 continue;
             }
 
-            let output_str = String::from_utf8(output.stdout)?;
+            let output_str = String::from_utf8(cmd.stdout)?;
             let detector_output = DetectResult::from_str(&output_str)?;
             if !detector_output.pass {
                 continue;

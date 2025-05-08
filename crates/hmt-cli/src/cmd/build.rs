@@ -25,7 +25,7 @@ use walkdir::WalkDir;
 use hmt_manifest::{ManifestFile, ProjectManifest};
 use hmt_registry::traits::Query;
 
-use crate::{context::Context, errors::Result};
+use crate::{context::Context, errors::Result, utils};
 
 /// Builds the entire workspace
 #[derive(Args, Debug)]
@@ -105,15 +105,21 @@ impl Command {
                 .ok_or_else(|| anyhow!("Source file has no valid name: {}", input.display()))?;
             let output = target_dir.join(file_stem).with_extension("clif");
 
-            run_command(
+            let cmd = utils::command(
                 compiler_path,
                 &[
                     "--input",
                     input.to_str().context("Invalid input path")?,
                     "--output",
-                    input.to_str().context("Invalid output path")?,
+                    output.to_str().context("Invalid output path")?,
                 ],
-            )?;
+            )
+            .await?;
+
+            if !cmd.status.success() {
+                let stderr = String::from_utf8_lossy(&cmd.stderr);
+                bail!("Compilation failed with status {}:\n{}", cmd.status, stderr.trim());
+            }
 
             println!("Compiled: {} → {}", input.display(), output.display());
         }
@@ -140,38 +146,25 @@ impl Command {
             let input = entry.path();
             let output = input.with_extension("o");
 
-            run_command(
+            let cmd = utils::command(
                 compiler_path,
                 &[
                     "--input",
                     input.to_str().context("Invalid input path")?,
                     "--output",
-                    input.to_str().context("Invalid output path")?,
+                    output.to_str().context("Invalid output path")?,
                 ],
-            )?;
+            )
+            .await?;
+
+            if !cmd.status.success() {
+                let stderr = String::from_utf8_lossy(&cmd.stderr);
+                bail!("Compilation failed with status {}:\n{}", cmd.status, stderr.trim());
+            }
 
             println!("Compiled: {} → {}", input.display(), output.display());
         }
 
         Ok(())
     }
-}
-
-/// Executes a shell command with proper error handling
-fn run_command(program: &Path, args: &[&str]) -> Result<()> {
-    let status = std::process::Command::new(program).args(args).status().context(format!(
-        "Failed to execute: {} {}",
-        program.display(),
-        args.join(" ")
-    ))?;
-
-    if !status.success() {
-        bail!(
-            "Command failed with exit code {:?}: {} {}",
-            status.code(),
-            program.display(),
-            args.join(" ")
-        );
-    }
-    Ok(())
 }

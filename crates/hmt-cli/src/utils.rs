@@ -12,6 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::{
+    ffi::{OsStr, OsString},
+    process::Output,
+};
+
+use anyhow::Context as _;
+use tokio::process::Command;
+
 use hmt_manifest::CategoryMap;
 
 use crate::errors::Result;
@@ -35,4 +43,21 @@ pub fn print_domain_packages(domain: &str, categories: &CategoryMap) {
             }
         }
     }
+}
+
+/// Executes a system command asynchronously and returns its complete output
+pub async fn command<S, I, T>(program: S, args: I) -> Result<Output>
+where
+    S: AsRef<OsStr>,
+    I: IntoIterator<Item = T>,
+    T: AsRef<OsStr>,
+{
+    // Convert arguments to OsString for display purposes
+    let args_vec: Vec<OsString> = args.into_iter().map(|a| a.as_ref().to_os_string()).collect();
+
+    Command::new(program.as_ref()).args(&args_vec).output().await.with_context(|| {
+        let prog = program.as_ref().to_string_lossy();
+        let args_str = args_vec.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
+        format!("Failed to execute command: {prog} {args_str}")
+    })
 }
