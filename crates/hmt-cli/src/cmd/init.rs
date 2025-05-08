@@ -60,7 +60,11 @@ impl Command {
     }
 
     /// Execute all detectors and return all matching languages
-    async fn detect(&self, detectors: &Vec<PackageEntry>, path: &Path) -> Result<Vec<String>> {
+    async fn detect(
+        &self,
+        detectors: &Vec<PackageEntry>,
+        path: &Path,
+    ) -> Result<Vec<(String, String)>> {
         let mut languages = HashSet::new();
 
         for detector in detectors {
@@ -81,17 +85,18 @@ impl Command {
             }
 
             let language = detector_output.language.unwrap();
+            let extension = detector_output.extension.unwrap();
             println!("Detected language: {} using detector {}", language, detector.name);
-            languages.insert(language);
+            languages.insert((language, extension));
         }
 
         Ok(languages.into_iter().collect())
     }
 
     /// Prompt user to select from multiple matching languages
-    fn prompt_user_selection(&self, matches: &[String]) -> Result<String> {
+    fn prompt_user_selection(&self, matches: &[(String, String)]) -> Result<(String, String)> {
         println!("\nMultiple language detectors matched this project:");
-        for (i, language) in matches.iter().enumerate() {
+        for (i, (language, _)) in matches.iter().enumerate() {
             println!("{}. {}", i + 1, language);
         }
 
@@ -113,8 +118,8 @@ impl Command {
     }
 
     /// Write the detected language to hummanta.toml
-    fn write_config(&self, language: String) -> Result<()> {
-        let project = Project::new(&language);
+    fn write_config(&self, (language, extension): (String, String)) -> Result<()> {
+        let project = Project::new(&language, &extension);
         let manifest = ProjectManifest::new(project);
 
         manifest.save("hummanta.toml")?;

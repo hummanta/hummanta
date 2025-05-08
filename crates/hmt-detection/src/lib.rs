@@ -37,7 +37,7 @@ mod tests {
 
         impl Detector for DummyDetector {
             fn detect(&self, _context: &DetectContext) -> DetectResult {
-                DetectResult::pass("Rust".to_string())
+                DetectResult::pass("Rust".to_string(), "rs".to_string())
             }
         }
 
@@ -50,5 +50,6 @@ mod tests {
         // Assert expected outcome
         assert!(result.pass);
         assert_eq!(result.language, Some("Rust".to_string()));
+        assert_eq!(result.extension, Some("rs".to_string()))
     }
 }

@@ -19,22 +19,27 @@ use serde::{Deserialize, Serialize};
 pub struct DetectResult {
     /// Whether the detection was successful
     pub pass: bool,
+
     /// The detected source code type.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
+
+    /// File extension for the programming language.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extension: Option<String>,
 }
 
 impl DetectResult {
     /// Shortcut to create a successful detection result.
     #[inline]
-    pub fn pass(language: String) -> Self {
-        Self { pass: true, language: Some(language) }
+    pub fn pass(language: String, extension: String) -> Self {
+        Self { pass: true, language: Some(language), extension: Some(extension) }
     }
 
     /// Shortcut to create a failed detection result.
     #[inline]
     pub fn fail() -> Self {
-        Self { pass: false, language: None }
+        Self { pass: false, language: None, extension: None }
     }
 }
 
@@ -58,9 +63,10 @@ mod tests {
 
     #[test]
     fn test_pass() {
-        let result = DetectResult::pass("Rust".to_string());
+        let result = DetectResult::pass("Rust".to_string(), "rs".to_string());
         assert!(result.pass);
         assert_eq!(result.language, Some("Rust".to_string()));
+        assert_eq!(result.extension, Some("rs".to_string()));
     }
 
     #[test]
@@ -68,5 +74,6 @@ mod tests {
         let result = DetectResult::fail();
         assert!(!result.pass);
         assert_eq!(result.language, None);
+        assert_eq!(result.extension, None)
     }
 }

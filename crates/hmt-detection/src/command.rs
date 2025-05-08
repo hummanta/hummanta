@@ -54,7 +54,7 @@ mod tests {
 
         impl Detector for DummyDetector {
             fn detect(&self, _context: &DetectContext) -> DetectResult {
-                DetectResult::pass("Rust".to_string())
+                DetectResult::pass("Rust".to_string(), "rs".to_string())
             }
         }
 

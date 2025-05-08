@@ -53,12 +53,15 @@ pub struct Project {
     /// The programming language used for the source code in this project.
     pub language: String,
 
-    /// The target platform to build for
+    /// File extension for the programming language.
+    pub extension: String,
+
+    /// The target platform to build for.
     pub target: Option<String>,
 }
 
 impl Project {
-    pub fn new<T: ToString>(language: T) -> Self {
-        Self { language: language.to_string(), target: None }
+    pub fn new<T: ToString>(language: T, extension: T) -> Self {
+        Self { language: language.to_string(), extension: extension.to_string(), target: None }
     }
 }
