@@ -21,6 +21,7 @@ use std::{
 use anyhow::{anyhow, bail, Context as _};
 use clap::Args;
 use once_cell::sync::OnceCell;
+use tracing::info;
 use walkdir::WalkDir;
 
 use hmt_manifest::{ManifestFile, ProjectManifest};
@@ -51,7 +52,7 @@ impl Command {
         self.compile(ctx.clone(), &manifest, &target_dir).await?;
         self.emit(ctx.clone(), &manifest, &target_dir).await?;
 
-        println!("Build completed for target '{}'", target);
+        info!("Build completed for target '{}'", target);
         Ok(())
     }
 
@@ -135,7 +136,7 @@ impl Command {
                 bail!("Compilation failed with status {}:\n{}", cmd.status, stderr.trim());
             }
 
-            println!("Compiled: {} → {}", input.display(), output.display());
+            info!("Compiled: {} → {}", input.display(), output.display());
         }
 
         Ok(())
@@ -183,7 +184,7 @@ impl Command {
                 bail!("Compilation failed with status {}:\n{}", cmd.status, stderr.trim());
             }
 
-            println!("Compiled: {} → {}", input.display(), output.display());
+            info!("Compiled: {} → {}", input.display(), output.display());
         }
 
         Ok(())

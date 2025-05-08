@@ -14,12 +14,14 @@
 
 use std::{path::PathBuf, sync::Arc};
 
-use anyhow::Context as _;
+use anyhow::{Context as _, Ok};
+use tokio::sync::{OnceCell, RwLock};
+use tracing::debug;
+
 use hmt_registry::{
     manager::{TargetManager, ToolchainManager},
     RegistryClient,
 };
-use tokio::sync::{OnceCell, RwLock};
 
 use crate::{config::Config, errors::Result};
 
@@ -57,13 +59,16 @@ impl Context {
         let config_path = home_dir.join("config.toml");
         let config = Config::load(&config_path)?;
 
-        Ok(Self {
+        let context = Self {
             config,
             config_path,
             registry: registry.clone(),
             target_manager: OnceCell::new(),
             toolchain_manager: OnceCell::new(),
-        })
+        };
+        debug!("Registry: {}", context.registry());
+
+        Ok(context)
     }
 
     /// Gets the path to the Hummanta home directory.

@@ -21,6 +21,7 @@ use anyhow::Context as _;
 use tokio::process::Command;
 
 use hmt_manifest::CategoryMap;
+use tracing::debug;
 
 use crate::errors::Result;
 
@@ -54,10 +55,9 @@ where
 {
     // Convert arguments to OsString for display purposes
     let args_vec: Vec<OsString> = args.into_iter().map(|a| a.as_ref().to_os_string()).collect();
+    let prog = program.as_ref().to_string_lossy();
+    let args_str = args_vec.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
+    debug!("Executing {prog} {args_str}");
 
-    Command::new(program.as_ref()).args(&args_vec).output().await.with_context(|| {
-        let prog = program.as_ref().to_string_lossy();
-        let args_str = args_vec.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
-        format!("Failed to execute command: {prog} {args_str}")
-    })
+    Command::new(program.as_ref()).args(&args_vec).output().await.context("Command execute failed!")
 }

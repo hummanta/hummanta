@@ -39,7 +39,7 @@ impl RegistryClient {
     /// Fetches and parses the index manifest from the registry.
     pub async fn index(&self) -> Result<IndexManifest> {
         let context = FetchContext::new("index.toml");
-        let bytes = self.fetcher.fetch(&context).await?;
+        let bytes = self.fetch(&context).await?;
         let manifest = IndexManifest::from_slice(&bytes)?;
 
         Ok(manifest)
