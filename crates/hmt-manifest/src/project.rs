@@ -53,7 +53,7 @@ pub struct Project {
     /// The programming language used for the source code in this project.
     pub language: String,
 
-    /// The target to build
+    /// The target platform to build for
     pub target: Option<String>,
 }
 

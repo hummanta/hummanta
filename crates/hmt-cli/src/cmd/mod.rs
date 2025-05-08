@@ -45,7 +45,7 @@ pub enum Commands {
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         match &self.command {
-            Commands::Build(cmd) => cmd.exec(ctx),
+            Commands::Build(cmd) => cmd.exec(ctx).await,
             Commands::Init(cmd) => cmd.exec(ctx).await,
             Commands::Target(cmd) => cmd.exec(ctx).await,
             Commands::Toolchain(cmd) => cmd.exec(ctx).await,
