@@ -28,7 +28,10 @@ use tracing::error;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .without_time() // Removes the timestamp
+        .with_target(false) // remove the target (hummanta)
+        .init();
 
     let cmd = Command::parse();
     let ctx = Context::new(&cmd.registry)?;
