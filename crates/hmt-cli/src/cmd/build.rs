@@ -36,6 +36,7 @@ pub struct Command {
     #[arg(long)]
     target: Option<String>,
 
+    /// The resolved target platform, determined by CLI or manifest
     #[clap(skip)]
     resolved_target: OnceCell<String>,
 }
@@ -79,12 +80,12 @@ impl Command {
 
     /// Prepares and validates the build output directory
     fn target_dir(&self, target: &str) -> Result<PathBuf> {
-        let targets_dir = Path::new("targets").join(target);
-        if !targets_dir.exists() {
-            fs::create_dir_all(&targets_dir) //
-                .context("Failed to create targets directory")?;
+        let target_dir = Path::new("target").join(target);
+        if !target_dir.exists() {
+            fs::create_dir_all(&target_dir) //
+                .context("Failed to create target directory")?;
         }
-        Ok(targets_dir)
+        Ok(target_dir)
     }
 
     /// Compiles source code to intermediate representation (CLIF)
