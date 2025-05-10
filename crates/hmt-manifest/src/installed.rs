@@ -39,8 +39,6 @@ impl Entry {
 /// Represents a package entry with associated domain, name, and metadata.
 #[derive(Debug, Clone)]
 pub struct PackageEntry {
-    /// The domain to which the package belongs.
-    pub domain: String,
     /// The name of the package.
     pub name: String,
     /// The metadata associated with the package entry.
@@ -48,9 +46,15 @@ pub struct PackageEntry {
 }
 
 impl PackageEntry {
-    /// Creates a new PackageEntry from the given domain, name, and entry.
-    pub fn new(domain: String, name: String, entry: Entry) -> Self {
-        Self { domain, name, entry }
+    /// Creates a new PackageEntry from the given name, and entry.
+    pub fn new(name: String, entry: Entry) -> Self {
+        Self { name, entry }
+    }
+}
+
+impl From<(&String, &Entry)> for PackageEntry {
+    fn from((name, entry): (&String, &Entry)) -> Self {
+        Self::new(name.clone(), entry.clone())
     }
 }
 
@@ -146,26 +150,13 @@ impl InstalledManifest {
         }
     }
 
-    /// Get all entries under the given kind and category across all domains.
-    /// Returns a vector of `PackageEntry`.
-    pub fn by_category(&self, kind: &str, category: &str) -> Vec<PackageEntry> {
-        let mut results = Vec::new();
-
-        if let Some(domain_map) = self.get_domain(kind) {
-            for (domain, cat_map) in domain_map {
-                if let Some(pkg_map) = cat_map.get(category) {
-                    for (pkg_name, entry) in pkg_map {
-                        results.push(PackageEntry::new(
-                            domain.clone(),
-                            pkg_name.clone(),
-                            entry.clone(),
-                        ));
-                    }
-                }
-            }
-        }
-
-        results
+    /// Get all package maps under the given kind and category across all domains.
+    pub fn by_category(&self, kind: &str, category: &str) -> Vec<&PackageMap> {
+        self.get_domain(kind)
+            .iter()
+            .flat_map(|domain_map| domain_map.values())
+            .filter_map(|cat_map| cat_map.get(category))
+            .collect()
     }
 }
 

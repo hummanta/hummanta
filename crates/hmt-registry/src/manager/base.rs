@@ -199,7 +199,11 @@ impl<T: PackageKind> RemoteMetadata for Manager<T> {
 
 impl<T: PackageKind> Query for Manager<T> {
     fn by_category(&self, category: &str) -> Vec<PackageEntry> {
-        self.cache.by_category(T::kind(), category)
+        self.cache
+            .by_category(T::kind(), category)
+            .iter()
+            .flat_map(|pkg| pkg.iter().map(From::from))
+            .collect()
     }
 
     fn get_category(&self, domain: &str) -> Option<&CategoryMap> {
@@ -207,14 +211,9 @@ impl<T: PackageKind> Query for Manager<T> {
     }
 
     fn get_package(&self, domain: &str, cat: &str) -> Vec<PackageEntry> {
-        let mut results = Vec::new();
-
-        if let Some(pkg_map) = self.cache.get_package(T::kind(), domain, cat) {
-            for (name, entry) in pkg_map {
-                results.push(PackageEntry::new(domain.to_string(), name.clone(), entry.clone()));
-            }
-        }
-
-        results
+        self.cache
+            .get_package(T::kind(), domain, cat)
+            .map(|pkg| pkg.iter().map(From::from).collect())
+            .unwrap_or_default()
     }
 }
