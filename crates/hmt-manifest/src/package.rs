@@ -117,6 +117,7 @@ pub struct Package {
 
     /// The programming language used for the package.
     /// Just used for detector and frontend.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
 
     /// The kind of the package (e.g., "detector", "compiler").
