@@ -116,7 +116,8 @@ pub struct Package {
     pub repository: String,
 
     /// The programming language used for the package.
-    pub language: String,
+    /// Just used for detector and frontend.
+    pub language: Option<String>,
 
     /// The kind of the package (e.g., "detector", "compiler").
     pub kind: String,
@@ -148,7 +149,7 @@ mod tests {
             name: String::from("test-package"),
             homepage: String::from("https://hummanta.github.io/solidity-detector-foundry"),
             repository: String::from("https://github.com/hummanta/solidity-detector-foundry"),
-            language: String::from("Rust"),
+            language: Some(String::from("Rust")),
             kind: String::from("detector"),
             description: Some(String::from("A test package")),
             targets: vec![
