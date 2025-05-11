@@ -14,10 +14,11 @@
 
 use std::{
     ffi::{OsStr, OsString},
+    path::{Path, PathBuf},
     process::Output,
 };
 
-use anyhow::Context as _;
+use anyhow::{anyhow, Context as _};
 use tokio::process::Command;
 
 use hmt_manifest::CategoryMap;
@@ -60,4 +61,31 @@ where
     debug!("Executing {prog} {args_str}");
 
     Command::new(program.as_ref()).args(&args_vec).output().await.context("Command execute failed!")
+}
+
+/// Searches for `filename` in current directory
+/// and parent directories until found or root is reached.
+pub fn find<P: AsRef<Path>>(filename: P) -> Result<PathBuf> {
+    let mut current_dir = std::env::current_dir()?;
+
+    loop {
+        let candidate = current_dir.join(&filename);
+
+        // Check if the candidate path exists and is a file.
+        // Path::is_file() handles existence checks and file type internally.
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+
+        // Try to move to the parent directory.
+        // PathBuf::pop() returns false if current_dir is already a root,
+        // or an empty path, or has no parent component.
+        if !current_dir.pop() {
+            // No more parent directories to check.
+            break;
+        }
+    }
+
+    // If the loop finishes, the file was not found in the hierarchy.
+    Err(anyhow!("Not found {}", filename.as_ref().display()))
 }

@@ -43,11 +43,11 @@ pub struct Command {
 
 impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
-        let manifest = ProjectManifest::load("hummanta.toml")
-            .with_context(|| "Could not find 'hummanta.toml'. Please run `hummanta init` first.")?;
+        let manifest_path = ctx.manifest_path()?;
+        let manifest = ProjectManifest::load(manifest_path)?;
 
         let target = self.target(&manifest)?;
-        let target_dir = self.target_dir(target)?;
+        let target_dir = self.target_dir(ctx.clone(), target)?;
 
         // Execute the complete build pipeline
         self.compile(ctx.clone(), &manifest, &target_dir).await?;
@@ -79,12 +79,14 @@ impl Command {
     }
 
     /// Prepares and validates the build output directory
-    fn target_dir(&self, target: &str) -> Result<PathBuf> {
-        let target_dir = Path::new("target").join(target);
+    fn target_dir(&self, ctx: Arc<Context>, target: &str) -> Result<PathBuf> {
+        let target_dir = ctx.project_dir()?.join("target").join(target);
+
         if !target_dir.exists() {
             fs::create_dir_all(&target_dir) //
                 .context("Failed to create target directory")?;
         }
+
         Ok(target_dir)
     }
 
@@ -110,7 +112,7 @@ impl Command {
         let compiler_path = &package.entry.path;
 
         // Process all source files with the matching language extension
-        for entry in WalkDir::new(".")
+        for entry in WalkDir::new(ctx.project_dir()?)
             .into_iter()
             .filter_map(Result::ok)
             .filter(|e| e.path().extension().is_some_and(|ext| ext == extension))

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use anyhow::{Context as _, Ok};
 use tokio::sync::{OnceCell, RwLock};
@@ -23,7 +26,7 @@ use hmt_registry::{
     RegistryClient,
 };
 
-use crate::{config::Config, errors::Result};
+use crate::{config::Config, errors::Result, utils};
 
 /// Holds the state of the application.
 pub struct Context {
@@ -41,6 +44,9 @@ pub struct Context {
 
     /// Lazily initialized toolchain manager
     toolchain_manager: OnceCell<Arc<RwLock<ToolchainManager>>>,
+
+    /// The path to the project manifest.
+    manifest_path: Option<PathBuf>,
 }
 
 impl Context {
@@ -58,6 +64,7 @@ impl Context {
 
         let config_path = home_dir.join("config.toml");
         let config = Config::load(&config_path)?;
+        let manifest_path = utils::find("hummanta.toml").ok();
 
         let context = Self {
             config,
@@ -65,6 +72,7 @@ impl Context {
             registry: registry.clone(),
             target_manager: OnceCell::new(),
             toolchain_manager: OnceCell::new(),
+            manifest_path,
         };
         debug!("Registry: {}", context.registry());
 
@@ -105,5 +113,19 @@ impl Context {
             })
             .await
             .cloned()
+    }
+
+    /// Gets the path to the Hummanta project manifest.
+    pub fn manifest_path(&self) -> Result<&PathBuf> {
+        self.manifest_path.as_ref().ok_or_else(|| {
+            anyhow::anyhow!("Could not find 'hummanta.toml'. Please run `hummanta init` first.")
+        })
+    }
+
+    /// Determine project directory from manifest path
+    pub fn project_dir(&self) -> Result<&Path> {
+        self.manifest_path()?.parent().ok_or_else(|| {
+            anyhow::anyhow!("Could not determine project directory from manifest path")
+        })
     }
 }
