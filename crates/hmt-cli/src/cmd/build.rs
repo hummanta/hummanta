@@ -138,8 +138,6 @@ impl Command {
                 let stderr = String::from_utf8_lossy(&cmd.stderr);
                 bail!("Compilation failed with status {}:\n{}", cmd.status, stderr.trim());
             }
-
-            info!("Compiled: {} → {}", input.display(), output.display());
         }
 
         Ok(())
@@ -186,8 +184,6 @@ impl Command {
                 let stderr = String::from_utf8_lossy(&cmd.stderr);
                 bail!("Compilation failed with status {}:\n{}", cmd.status, stderr.trim());
             }
-
-            info!("Compiled: {} → {}", input.display(), output.display());
         }
 
         Ok(())

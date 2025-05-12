@@ -217,7 +217,7 @@ impl<T: PackageKind> Query for Manager<T> {
 
     fn get_package(&self, domain: &str, cat: &str) -> Vec<PackageEntry> {
         self.cache
-            .get_package(T::kind(), domain, cat)
+            .get_package(T::kind(), &domain.to_lowercase(), cat)
             .map(|pkg| pkg.iter().map(From::from).collect())
             .unwrap_or_default()
     }
