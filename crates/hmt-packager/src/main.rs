@@ -19,6 +19,7 @@ mod utils;
 use anyhow::Result;
 use clap::Parser;
 use std::fs;
+use tracing::{error, info};
 
 use self::{args::Arguments, package::package};
 
@@ -29,7 +30,7 @@ async fn main() -> Result<()> {
     // prepare the bin directory
     let input_path = args.target_dir();
     if !input_path.exists() {
-        eprintln!("Error: input directory {:?} does not exist.", input_path);
+        error!("Input directory {:?} does not exist.", input_path);
         std::process::exit(1);
     }
 
@@ -42,14 +43,14 @@ async fn main() -> Result<()> {
     let target = args.target();
     let version = args.version();
 
-    println!("Creating archives and checksums for executables in {:?}:\n", input_path);
+    info!("Creating archives and checksums for executables in {:?}:\n", input_path);
 
     // Call the package function to handle processing
     if let Err(e) = package(&input_path, &output_path, &target, &version).await {
-        eprintln!("Error: Failed to package files: {}", e);
+        error!("Failed to package files: {}", e);
         std::process::exit(1);
     }
 
-    println!("Done!");
+    info!("Done!");
     Ok(())
 }

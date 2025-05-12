@@ -21,6 +21,7 @@ use args::Args;
 use clap::Parser;
 
 use hmt_manifest::{ManifestFile, Package};
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -50,6 +51,6 @@ async fn main() -> Result<()> {
         package::create(&package, &index_path, version)?;
     }
 
-    println!("Manifests generated successfully!");
+    info!("Manifests generated successfully!");
     Ok(())
 }

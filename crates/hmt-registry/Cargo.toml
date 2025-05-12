@@ -12,3 +12,4 @@ hmt-utils.workspace = true
 target-triple.workspace = true
 thiserror.workspace = true
 toml.workspace = true
+tracing.workspace = true

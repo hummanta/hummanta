@@ -17,6 +17,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use tracing::error;
 
 use crate::{DetectContext, Detector};
 
@@ -32,7 +33,7 @@ pub fn run<T: Detector>(detector: T) {
     let args = Arguments::parse();
 
     let path = args.path.unwrap_or_else(|| {
-        eprintln!("No path provided. Use --path <path> or set DETECT_PATH env variable.");
+        error!("No path provided. Use --path <path> or set DETECT_PATH env variable.");
         std::process::exit(1);
     });
 

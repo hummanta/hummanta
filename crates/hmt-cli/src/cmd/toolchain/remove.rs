@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use clap::Args;
 use hmt_registry::traits::PackageManager;
+use tracing::warn;
 
 use crate::{context::Context, errors::Result, utils::confirm};
 
@@ -34,7 +35,7 @@ impl Command {
     pub async fn exec(&self, ctx: Arc<Context>) -> Result<()> {
         // Confirm removal with user (unless force flag is set)
         if !self.force && !confirm("Are you sure you want to continue? [y/N]")? {
-            println!("Removal cancelled");
+            warn!("Removal cancelled");
             return Ok(());
         }
 

@@ -15,6 +15,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
+use tracing::info;
 use walkdir::WalkDir;
 
 use hmt_utils::{
@@ -48,7 +49,7 @@ async fn process(path: PathBuf, output_path: &Path, target: &str, version: &str)
     let archive_path = output_path.join(&archive_name);
     let checksum_path = output_path.join(format!("{}.{}", archive_name, CHECKSUM_FILE_SUFFIX));
 
-    println!("{}: \n  {}\n  {}\n", bin_name, archive_path.display(), checksum_path.display());
+    info!("{}: \n  {}\n  {}\n", bin_name, archive_path.display(), checksum_path.display());
 
     // Create a tar.gz archive for the executable
     archive_file(&path, &archive_path)

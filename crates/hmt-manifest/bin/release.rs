@@ -18,6 +18,7 @@ use anyhow::Result;
 
 use hmt_manifest::{Artifact, Package, Release, ReleaseManifest};
 use hmt_utils::checksum::{self, CHECKSUM_FILE_SUFFIX};
+use tracing::warn;
 
 /// Generate a release manifest based on package configuration and artifacts
 ///
@@ -41,7 +42,7 @@ pub fn generate(package: &Package, artifacts_dir: &Path, version: &str) -> Resul
         // In local development mode, we can only generate artifacts for the current platform
         // and cannot cross-compile for other platforms, so we skip them.
         if !checksum_path.exists() {
-            eprintln!("Artifact not found: {}, skipped", artifact_name);
+            warn!("Artifact not found: {}, skipped", artifact_name);
             continue;
         }
 

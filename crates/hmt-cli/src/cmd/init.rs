@@ -26,6 +26,7 @@ use clap::Args;
 use hmt_detection::DetectResult;
 use hmt_manifest::{ManifestFile, PackageEntry, Project, ProjectManifest};
 use hmt_registry::traits::Query;
+use tracing::{debug, info, warn};
 
 use crate::{context::Context, errors::Result, utils};
 
@@ -47,7 +48,7 @@ impl Command {
         let languages = self.detect(&detectors, &path).await?;
 
         match languages.len() {
-            0 => println!("No supported language detected in this directory"),
+            0 => warn!("No supported language detected in this directory"),
             1 => self.write_config(languages[0].clone())?,
             _ => {
                 // Multiple matches - let user choose
@@ -89,7 +90,7 @@ impl Command {
             let extension =
                 detector_output.extension.context("Detector did not return an extension")?;
 
-            println!("Detected language: {} using detector {}", language, detector.name);
+            debug!("Detected language: {} using detector {}", language, detector.name);
             languages.insert((language, extension));
         }
 
@@ -126,7 +127,7 @@ impl Command {
         let manifest = ProjectManifest::new(project);
 
         manifest.save("hummanta.toml")?;
-        println!("\nSuccessfully initialized project with language: {}", language);
+        info!("Successfully initialized project with language: {}", language);
 
         Ok(())
     }

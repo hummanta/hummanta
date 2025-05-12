@@ -449,6 +449,7 @@ dependencies = [
  "clap",
  "serde",
  "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -475,6 +476,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tracing",
 ]
 
 [[package]]
@@ -487,6 +489,7 @@ dependencies = [
  "target-triple",
  "tempfile",
  "tokio",
+ "tracing",
  "walkdir",
 ]
 
@@ -500,6 +503,7 @@ dependencies = [
  "target-triple",
  "thiserror",
  "toml",
+ "tracing",
 ]
 
 [[package]]

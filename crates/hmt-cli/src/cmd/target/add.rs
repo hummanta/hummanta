@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use clap::Args;
 use hmt_registry::traits::PackageManager;
+use tracing::info;
 
 use crate::{context::Context, errors::Result};
 
@@ -33,7 +34,7 @@ impl Command {
         let mut manager = manager.write().await;
 
         manager.add(&self.target).await?;
-        println!("Successfully installed {} target", self.target);
+        info!("Successfully installed {} target", self.target);
 
         Ok(())
     }

@@ -20,6 +20,7 @@ use hmt_manifest::{
     PackageManifest, ReleaseManifest,
 };
 use hmt_utils::{archive, bytes::FromSlice};
+use tracing::{error, warn};
 
 use crate::{
     error::{RegistryError, Result},
@@ -76,14 +77,14 @@ impl<T: PackageKind> PackageManager for Manager<T> {
         for (category, name) in index.entries() {
             // let package = self.fetch_package(&index, category, name).await?;
             let Ok(package) = self.fetch_package(&index, category, name).await else {
-                eprintln!("{name} failed to fetch, skipping");
+                warn!("{name} failed to fetch, skipping");
                 continue;
             };
 
             // Fetch the release manifest by latest version.
             let release = self.fetch_release(&package, &package.latest).await?;
             if !release.supports_target(target_triple::TARGET) {
-                eprintln!("{name} does not support current target platform, skipping.");
+                warn!("{name} does not support current target platform, skipping.");
                 continue;
             }
 
@@ -98,7 +99,7 @@ impl<T: PackageKind> PackageManager for Manager<T> {
 
             // Unpack the file and extract its contents to the target directory
             archive::unpack(&data, &install_path).map_err(|e| {
-                eprintln!("ERROR: {}", e);
+                error!("{}", e);
                 RegistryError::UnpackError(name.to_string())
             })?;
 
@@ -122,7 +123,7 @@ impl<T: PackageKind> PackageManager for Manager<T> {
         // If the installation directory exists, remove it recursively.
         if install_path.exists() {
             std::fs::remove_dir_all(&install_path).map_err(|e| {
-                eprintln!("Failed to remove installation directory for '{domain}': {e}");
+                error!("Failed to remove installation directory for '{domain}': {e}");
                 RegistryError::RemoveError(domain.to_string())
             })?;
         }
