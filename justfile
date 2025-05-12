@@ -40,3 +40,9 @@ all:
     just check
     just build dev
     just package dev "" local
+
+# Build and install all binaries for testing
+install:
+    cargo install --path crates/hmt-cli
+    cargo install --path crates/hmt-manifest
+    cargo install --path crates/hmt-packager

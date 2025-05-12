@@ -84,8 +84,11 @@ impl Command {
                 continue;
             }
 
-            let language = detector_output.language.unwrap();
-            let extension = detector_output.extension.unwrap();
+            let language =
+                detector_output.language.context("Detector did not return a language")?;
+            let extension =
+                detector_output.extension.context("Detector did not return an extension")?;
+
             println!("Detected language: {} using detector {}", language, detector.name);
             languages.insert((language, extension));
         }
