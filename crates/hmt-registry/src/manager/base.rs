@@ -74,7 +74,11 @@ impl<T: PackageKind> PackageManager for Manager<T> {
 
         // Iterate over the index entries to fetch and install packages
         for (category, name) in index.entries() {
-            let package = self.fetch_package(&index, category, name).await?;
+            // let package = self.fetch_package(&index, category, name).await?;
+            let Ok(package) = self.fetch_package(&index, category, name).await else {
+                eprintln!("{name} failed to fetch, skipping");
+                continue;
+            };
 
             // Fetch the release manifest by latest version.
             let release = self.fetch_release(&package, &package.latest).await?;
