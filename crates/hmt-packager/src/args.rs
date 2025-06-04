@@ -39,11 +39,10 @@ impl Arguments {
     pub fn profile(&self) -> String {
         if self.profile.is_empty() {
             env::var("CARGO_CFG_PROFILE").unwrap_or_else(|_| "debug".to_string())
+        } else if self.profile.eq("dev") {
+            "debug".to_string()
         } else {
-            self.profile
-                .eq("dev")
-                .then(|| "debug".to_string())
-                .unwrap_or_else(|| self.profile.clone())
+            self.profile.clone()
         }
     }
 
