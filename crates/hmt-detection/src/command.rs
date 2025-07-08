@@ -41,7 +41,7 @@ pub fn run<T: Detector>(detector: T) {
     let result = detector.detect(&context);
 
     // Print the result as JSON, or an error message if serialization fails.
-    println!("{}", result);
+    println!("{result}");
 }
 
 #[cfg(test)]

@@ -27,7 +27,7 @@ use hmt_manifest::{ManifestFile, Package, PackageManifest};
 /// * `version` - Initial version of the package
 pub fn create(package: &Package, path: &Path, version: &str) -> Result<()> {
     let mut manifest = PackageManifest::new(package.clone(), version.to_string());
-    manifest.add_release(version.to_string(), format!("release-{}.toml", version));
+    manifest.add_release(version.to_string(), format!("release-{version}.toml"));
 
     manifest.save(path)?;
     Ok(())
@@ -60,7 +60,7 @@ pub fn update(package: &Package, path: &Path, version: &str) -> Result<()> {
     }
 
     // Add new release file if it doesn't exist
-    let release = format!("release-{}.toml", version);
+    let release = format!("release-{version}.toml");
     if !manifest.releases.contains_key(version) {
         manifest.add_release(version.to_string(), release);
     }

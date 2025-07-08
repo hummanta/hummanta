@@ -27,7 +27,7 @@ pub async fn generate(file: &Path, output_path: &Path) -> Result<()> {
     let mut hasher = Sha256::new();
     let file = fs::File::open(file)
         .await
-        .context(format!("Failed to open file for checksum: {:?}", file))?;
+        .context(format!("Failed to open file for checksum: {file:?}"))?;
     let mut reader = BufReader::new(file);
     let mut buffer = [0; 4096];
 
@@ -45,7 +45,7 @@ pub async fn generate(file: &Path, output_path: &Path) -> Result<()> {
     // Create the checksum file
     let mut checksum_file = fs::File::create(output_path)
         .await
-        .context(format!("Failed to create checksum file: {:?}", output_path))?;
+        .context(format!("Failed to create checksum file: {output_path:?}"))?;
 
     // Write the checksum to the file
     checksum_file.write_all(checksum.as_bytes()).await.context("Failed to write checksum")?;

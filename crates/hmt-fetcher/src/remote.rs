@@ -87,7 +87,7 @@ mod tests {
     async fn start_mock_server() -> String {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
-        let url = format!("http://{}", addr);
+        let url = format!("http://{addr}");
 
         tokio::spawn(async move {
             let (mut socket, _) = listener.accept().await.unwrap();

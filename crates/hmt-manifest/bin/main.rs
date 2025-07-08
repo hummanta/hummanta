@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
 
     // Generate release manifest and save to path
     let release = release::generate(&package, &args.artifacts_dir, version)?;
-    release.save(args.output_dir.join(format!("release-{}.toml", version)))?;
+    release.save(args.output_dir.join(format!("release-{version}.toml")))?;
 
     // Update or create package manifest
     let index_path = args.output_dir.join("index.toml");

@@ -45,21 +45,21 @@ pub async fn package(
 /// Process a single executable by creating a tar.gz archive and checksum
 async fn process(path: PathBuf, output_path: &Path, target: &str, version: &str) -> Result<()> {
     let bin_name = path.file_stem().unwrap().to_string_lossy().to_string();
-    let archive_name = format!("{}-{}-{}.tar.gz", bin_name, version, target);
+    let archive_name = format!("{bin_name}-{version}-{target}.tar.gz");
     let archive_path = output_path.join(&archive_name);
-    let checksum_path = output_path.join(format!("{}.{}", archive_name, CHECKSUM_FILE_SUFFIX));
+    let checksum_path = output_path.join(format!("{archive_name}.{CHECKSUM_FILE_SUFFIX}"));
 
     info!("{}: \n  {}\n  {}\n", bin_name, archive_path.display(), checksum_path.display());
 
     // Create a tar.gz archive for the executable
     archive_file(&path, &archive_path)
         .await
-        .context(format!("Failed to create archive for {:?}", path))?;
+        .context(format!("Failed to create archive for {path:?}"))?;
 
     // Generate checksum for the archive
     checksum::generate(&archive_path, &checksum_path)
         .await
-        .context(format!("Failed to generate checksum for {:?}", archive_path))?;
+        .context(format!("Failed to generate checksum for {archive_path:?}"))?;
 
     Ok(())
 }
@@ -103,8 +103,8 @@ mod tests {
         assert!(result.is_ok());
 
         // Construct the archive and checksum file names
-        let archive_name = format!("mock-executable-{}-{}.tar.gz", version, target);
-        let checksum_name = format!("{}.{}", archive_name, CHECKSUM_FILE_SUFFIX);
+        let archive_name = format!("mock-executable-{version}-{target}.tar.gz");
+        let checksum_name = format!("{archive_name}.{CHECKSUM_FILE_SUFFIX}");
 
         // Ensure the archive and checksum files are created
         assert!(output_path.join(&archive_name).exists());
@@ -135,8 +135,8 @@ mod tests {
         assert!(result.is_ok());
 
         // Construct the archive and checksum file names
-        let archive_name = format!("non-executable-{}-{}.tar.gz", version, target);
-        let checksum_name = format!("{}.{}", archive_name, CHECKSUM_FILE_SUFFIX);
+        let archive_name = format!("non-executable-{version}-{target}.tar.gz");
+        let checksum_name = format!("{archive_name}.{CHECKSUM_FILE_SUFFIX}");
 
         // Ensure that the archive and checksum files do not exist since the file is not executable
         assert!(!output_path.join(&archive_name).exists());

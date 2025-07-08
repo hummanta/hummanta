@@ -36,7 +36,7 @@ pub fn generate(package: &Package, artifacts_dir: &Path, version: &str) -> Resul
     for target in &package.targets {
         let artifact_name = format!("{}-{}-{}.tar.gz", package.name, version, target);
 
-        let checksum_file = format!("{}.{}", artifact_name, CHECKSUM_FILE_SUFFIX);
+        let checksum_file = format!("{artifact_name}.{CHECKSUM_FILE_SUFFIX}");
         let checksum_path = artifacts_dir.join(checksum_file);
 
         // In local development mode, we can only generate artifacts for the current platform

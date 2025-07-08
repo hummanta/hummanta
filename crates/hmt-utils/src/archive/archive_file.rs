@@ -32,7 +32,7 @@ pub async fn archive_file(src: &Path, dest: &Path) -> Result<()> {
             .context("Failed to create parent directories for destination")?;
     }
 
-    let file = fs::File::create(dest).context(format!("Failed to create archive: {:?}", dest))?;
+    let file = fs::File::create(dest).context(format!("Failed to create archive: {dest:?}"))?;
     let encoder = GzEncoder::new(file, Compression::default());
     let mut tar = Builder::new(encoder);
 
