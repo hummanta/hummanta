@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use base16ct::lower;
 use sha2::{Digest, Sha256};
 
 use anyhow::Result;
@@ -20,7 +21,8 @@ use anyhow::Result;
 pub fn verify(data: &[u8], expected_hash: &str) -> Result<()> {
     let mut hasher = Sha256::new();
     hasher.update(data);
-    let actual_hash = format!("{:x}", hasher.finalize());
+    let hash = hasher.finalize();
+    let actual_hash = lower::encode_string(&hash);
 
     if actual_hash != expected_hash {
         anyhow::bail!("Hash mismatch: expected {}, actual {}", expected_hash, actual_hash);

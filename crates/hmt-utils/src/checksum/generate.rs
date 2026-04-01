@@ -15,6 +15,7 @@
 use std::path::Path;
 
 use anyhow::{Context, Result};
+use base16ct::lower;
 use sha2::{Digest, Sha256};
 use tokio::{
     fs,
@@ -40,7 +41,8 @@ pub async fn generate(file: &Path, output_path: &Path) -> Result<()> {
     }
 
     // Finalize the hash
-    let checksum = format!("{:x}", hasher.finalize());
+    let hash = hasher.finalize();
+    let checksum = lower::encode_string(&hash);
 
     // Create the checksum file
     let mut checksum_file = fs::File::create(output_path)
@@ -84,7 +86,7 @@ mod tests {
         let mut hasher = Sha256::new();
         let file_content = fs::read(&file_path).unwrap(); // Read the file content
         hasher.update(&file_content);
-        let expected_checksum = format!("{:x}", hasher.finalize());
+        let expected_checksum = lower::encode_string(&hasher.finalize());
 
         // Verify checksum matches the calculated checksum
         assert_eq!(checksum_content, expected_checksum);
