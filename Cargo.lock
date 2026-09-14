@@ -1203,9 +1203,9 @@ dependencies = [
 
 [[package]]
 name = "target-triple"
-version = "1.0.1"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3a6bfce3d99adfa72d24750a61f782f3036a81e7f86d8841ee1326deaebd171"
+checksum = "423077334691ac40df0e250bafa964bf5112f8ac9ea6a10377903554b83152bb"
 
 [[package]]
 name = "tempfile"
