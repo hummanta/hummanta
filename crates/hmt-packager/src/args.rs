@@ -49,7 +49,7 @@ impl Arguments {
     // Determine the target triple, defaulting to the system's target if not set
     pub fn target(&self) -> String {
         if self.target.is_empty() {
-            target_triple::TARGET.to_string()
+            target_tuple::TARGET.to_string()
         } else {
             self.target.clone()
         }
@@ -103,7 +103,7 @@ mod tests {
     fn test_target_without_value() {
         let args =
             Arguments { target: "".to_string(), version: "".to_string(), profile: "".to_string() };
-        assert_eq!(args.target(), target_triple::TARGET.to_string());
+        assert_eq!(args.target(), target_tuple::TARGET.to_string());
     }
 
     #[test]

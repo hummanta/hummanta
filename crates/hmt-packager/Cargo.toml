@@ -9,7 +9,7 @@ hmt-utils.workspace = true
 
 anyhow.workspace = true
 clap.workspace = true
-target-triple.workspace = true
+target-tuple.workspace = true
 tempfile.workspace = true
 tokio.workspace = true
 tracing.workspace = true
