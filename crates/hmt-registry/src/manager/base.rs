@@ -83,14 +83,14 @@ impl<T: PackageKind> PackageManager for Manager<T> {
 
             // Fetch the release manifest by latest version.
             let release = self.fetch_release(&package, &package.latest).await?;
-            if !release.supports_target(target_triple::TARGET) {
+            if !release.supports_target(target_tuple::TARGET) {
                 warn!("{name} does not support current target platform, skipping.");
                 continue;
             }
 
             // Get the appropriate artifact for the target platform
             let artifact = release
-                .get_artifact(target_triple::TARGET)
+                .get_artifact(target_tuple::TARGET)
                 .expect("Artifact should exist if platform is supported");
 
             // Fetch and verify the checksum

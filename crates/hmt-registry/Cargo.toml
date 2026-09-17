@@ -9,7 +9,7 @@ hmt-manifest.workspace = true
 hmt-fetcher.workspace = true
 hmt-utils.workspace = true
 
-target-triple.workspace = true
+target-tuple.workspace = true
 thiserror.workspace = true
 toml.workspace = true
 tracing.workspace = true

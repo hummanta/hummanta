@@ -449,7 +449,7 @@ dependencies = [
  "anyhow",
  "clap",
  "hmt-utils",
- "target-triple",
+ "target-tuple",
  "tempfile",
  "tokio",
  "tracing",
@@ -463,7 +463,7 @@ dependencies = [
  "hmt-fetcher",
  "hmt-manifest",
  "hmt-utils",
- "target-triple",
+ "target-tuple",
  "thiserror",
  "toml",
  "tracing",
@@ -1202,10 +1202,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "target-triple"
-version = "2.0.0"
+name = "target-tuple"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "423077334691ac40df0e250bafa964bf5112f8ac9ea6a10377903554b83152bb"
+checksum = "876fef147edbcbddc8ac5cbbba92c7b86519e314e86638596c09673b2ed01e7f"
 
 [[package]]
 name = "tempfile"
