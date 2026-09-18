@@ -393,7 +393,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hmt-cli"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "anyhow",
  "clap",
@@ -413,7 +413,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-detection"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "clap",
  "serde",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-fetcher"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "async-trait",
  "hmt-utils",
@@ -435,7 +435,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-manifest"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "anyhow",
  "clap",
@@ -450,7 +450,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-packager"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "anyhow",
  "clap",
@@ -464,7 +464,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-registry"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "hmt-fetcher",
  "hmt-manifest",
@@ -477,7 +477,7 @@ dependencies = [
 
 [[package]]
 name = "hmt-utils"
-version = "0.11.35"
+version = "0.11.36"
 dependencies = [
  "anyhow",
  "base16ct",
